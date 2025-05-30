@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRD & UI 生成器</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/marked/marked.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row vh-100">
+            <!-- 左侧聊天区域 -->
+            <div class="col-4 chat-container">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">与Q Developer对话</h5>
+                    </div>
+                    <div class="card-body chat-messages" id="chatMessages">
+                        <!-- 聊天消息将在这里显示 -->
+                    </div>
+                    <div class="card-footer">
+                        <div class="input-group">
+                            <textarea class="form-control" id="userInput" placeholder="输入您的需求描述..." rows="3"></textarea>
+                            <button class="btn btn-primary" id="sendBtn">发送</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右侧预览区域 -->
+            <div class="col-8 preview-container">
+                <ul class="nav nav-tabs" id="previewTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="prd-tab" data-bs-toggle="tab" data-bs-target="#prd" type="button" role="tab" aria-controls="prd" aria-selected="true">PRD 预览</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="ui-tab" data-bs-toggle="tab" data-bs-target="#ui" type="button" role="tab" aria-controls="ui" aria-selected="false">UI 预览</button>
+                    </li>
+                </ul>
+                <div class="tab-content h-100" id="previewTabsContent">
+                    <div class="tab-pane fade show active h-100" id="prd" role="tabpanel" aria-labelledby="prd-tab">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">PRD.md 预览</h5>
+                                <button class="btn btn-sm btn-outline-secondary" id="downloadPRD">下载 PRD</button>
+                            </div>
+                            <div class="card-body markdown-content" id="prdContent">
+                                <!-- PRD 内容将在这里显示 -->
+                                <p class="text-muted">请在左侧输入您的需求描述，AI将为您生成PRD文档...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade h-100" id="ui" role="tabpanel" aria-labelledby="ui-tab">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">UI.html 预览</h5>
+                                <button class="btn btn-sm btn-outline-secondary" id="downloadUI">下载 UI</button>
+                            </div>
+                            <div class="card-body" id="uiPreviewWrapper">
+                                <iframe id="uiPreview" class="w-100 h-100" srcdoc="<p>请在左侧输入您的需求描述，AI将为您生成UI界面...</p>" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-same-origin"></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

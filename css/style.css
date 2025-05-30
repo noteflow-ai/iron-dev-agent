@@ -1,0 +1,201 @@
+body {
+    overflow: hidden;
+}
+
+.chat-container {
+    border-right: 1px solid #dee2e6;
+    display: flex;
+    flex-direction: column;
+}
+
+.card.h-100 {
+    display: flex;
+    flex-direction: column;
+    height: 100% !important;
+}
+
+.chat-messages {
+    height: auto;
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.message {
+    margin-bottom: 15px;
+    padding: 10px 15px;
+    border-radius: 10px;
+    max-width: 80%;
+    word-break: break-word;
+}
+
+.user-message {
+    background-color: #e9ecef;
+    margin-left: auto;
+    text-align: left;
+    align-self: flex-end;
+}
+
+.bot-message {
+    background-color: #f8f9fa;
+}
+
+.preview-container {
+    height: 100%;
+    padding: 0;
+}
+
+.tab-content {
+    padding-top: 10px;
+}
+
+.markdown-content {
+    overflow-y: auto;
+    padding: 20px;
+}
+
+#uiPreviewWrapper {
+    height: calc(100% - 60px);
+    padding: 0;
+}
+
+#uiPreview {
+    border: none;
+}
+
+.nav-tabs {
+    background-color: #f8f9fa;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+}
+
+.thinking {
+    font-style: italic;
+    color: #6c757d;
+}
+
+pre {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    overflow-x: auto;
+}
+
+code {
+    font-family: 'Courier New', Courier, monospace;
+}
+/* 项目选择器样式 */
+.project-selector {
+    padding: 10px 15px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.system-message {
+    background-color: #e3f2fd;
+    text-align: center;
+    font-style: italic;
+    padding: 8px;
+    margin: 10px 0;
+    border-radius: 10px;
+}
+#deleteProjectBtn {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.project-selector .form-select {
+    margin-bottom: 0.5rem;
+}
+/* 确保聊天区域有足够的底部间距，不遮挡输入框 */
+.chat-messages {
+    padding-bottom: 30px;
+}
+
+/* 确保消息内容不会溢出 */
+.message p {
+    margin-bottom: 0;
+}
+
+/* 改进聊天容器的滚动行为 */
+.card-body.chat-messages {
+    scrollbar-width: thin;
+    scrollbar-color: #dee2e6 #f8f9fa;
+}
+
+.card-body.chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.card-body.chat-messages::-webkit-scrollbar-track {
+    background: #f8f9fa;
+}
+
+.card-body.chat-messages::-webkit-scrollbar-thumb {
+    background-color: #dee2e6;
+    border-radius: 6px;
+}
+
+/* 输入框样式优化 */
+.card-footer {
+    background-color: white;
+    border-top: 1px solid #dee2e6;
+    padding: 10px;
+    position: relative;
+    z-index: 10;
+}
+
+/* 确保最后一条消息和输入框之间有足够间距 */
+.chat-messages::after {
+    content: "";
+    display: block;
+    height: 15px;
+}
+/* 修复聊天窗口滚动问题 */
+.card-footer {
+    flex-shrink: 0;
+}
+
+.card-header {
+    flex-shrink: 0;
+}
+
+.card-body {
+    flex: 1 1 auto;
+    overflow: hidden;
+}
+
+/* 确保项目选择器不会导致布局问题 */
+.project-selector {
+    flex-shrink: 0;
+}
+
+/* 确保输入框不会被挤压 */
+.input-group {
+    flex-wrap: nowrap;
+}
+
+.form-control {
+    min-height: 60px;
+}
+
+/* 优化整体布局 */
+.container-fluid, .row, .vh-100 {
+    height: 100%;
+}
+
+/* 确保滚动条始终可见 */
+.chat-messages::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+    display: block;
+}
+
+/* 修复可能的溢出问题 */
+.chat-container .card {
+    overflow: hidden;
+}

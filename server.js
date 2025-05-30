@@ -524,7 +524,14 @@ app.post('/api/claude', async (req, res) => {
 
 // 启动服务器 - 绑定到所有网络接口
 app.listen(port, '0.0.0.0', () => {
+  const isHotReload = process.env.NODE_ENV === 'development';
   console.log(`PRD & UI 生成器服务已启动: http://localhost:${port}`);
+  
+  if (isHotReload) {
+    console.log('热部署模式已启用，文件变更将自动重启服务器');
+    console.log('监视的文件: server.js, js/, css/, index.html');
+    console.log('忽略的目录: projects/, node_modules/, .git/');
+  }
 });
 // 获取项目列表
 app.get('/api/projects', (req, res) => {

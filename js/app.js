@@ -1,4 +1,8 @@
+// 确保页面加载完成后执行
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM加载完成，初始化应用...');
+    
+    // 获取DOM元素
     const chatMessages = document.getElementById('chatMessages');
     const userInput = document.getElementById('userInput');
     const sendBtn = document.getElementById('sendBtn');
@@ -6,11 +10,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const uiPreview = document.getElementById('uiPreview');
     const downloadPRD = document.getElementById('downloadPRD');
     const downloadUI = document.getElementById('downloadUI');
+    const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
+    const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
+    const chatSidebar = document.getElementById('chatSidebar');
 
     // 存储当前的PRD和UI内容以及项目ID
     let currentPRD = '';
     let currentUI = '';
     let currentProjectId = '';
+    
+    console.log('初始化UI组件...');
+    
+    // 初始化滚动到底部按钮
+    initScrollToBottomButton();
+    
+    // 初始化侧边栏切换按钮
+    initToggleSidebarButton();
+    
+    // 不需要在这里调用loadProjects，因为在外部已经调用了
 
     // 调用API的函数
     async function callClaudeAPI(prompt, type) {
@@ -241,7 +258,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 确保滚动到底部
     chatMessages.scrollTop = chatMessages.scrollHeight;
-});
+    
     // 加载项目列表
     async function loadProjects() {
         try {
@@ -368,5 +385,88 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // 初始化时加载项目列表
+    // 调用加载项目列表函数
     loadProjects();
+    
+    // 初始化滚动到底部按钮
+    function initScrollToBottomButton() {
+        console.log('初始化滚动到底部按钮...');
+        // 监听聊天消息区域的滚动事件
+        chatMessages.addEventListener('scroll', function() {
+            // 计算滚动位置
+            const scrollPosition = chatMessages.scrollTop + chatMessages.clientHeight;
+            const scrollHeight = chatMessages.scrollHeight;
+            
+            // 如果不在底部，显示滚动按钮
+            if (scrollHeight - scrollPosition > 50) {
+                scrollToBottomBtn.style.display = 'flex';
+            } else {
+                scrollToBottomBtn.style.display = 'none';
+            }
+        });
+        
+        // 点击滚动到底部按钮
+        scrollToBottomBtn.addEventListener('click', function() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+    }
+    
+    // 初始化侧边栏切换按钮
+    function initToggleSidebarButton() {
+        console.log('初始化侧边栏切换按钮...');
+        
+        // 获取固定按钮元素
+        const sidebarToggleFixed = document.getElementById('sidebarToggleFixed');
+        
+        // 切换侧边栏状态的函数
+        function toggleSidebar() {
+            console.log('切换侧边栏状态');
+            // 切换侧边栏的收起/展开状态
+            chatSidebar.classList.toggle('collapsed');
+            
+            // 更新按钮状态
+            const isCollapsed = chatSidebar.classList.contains('collapsed');
+            
+            // 保存当前状态到本地存储
+            localStorage.setItem('sidebarCollapsed', isCollapsed);
+            
+            if (isCollapsed) {
+                console.log('侧边栏已收起');
+                // 确保固定按钮可见
+                sidebarToggleFixed.style.display = 'flex';
+            } else {
+                console.log('侧边栏已展开');
+            }
+        }
+        
+        // 点击主切换按钮
+        toggleSidebarBtn.addEventListener('click', function() {
+            console.log('主侧边栏切换按钮被点击');
+            toggleSidebar();
+        });
+        
+        // 点击固定切换按钮
+        sidebarToggleFixed.addEventListener('click', function() {
+            console.log('固定侧边栏切换按钮被点击');
+            toggleSidebar();
+        });
+        
+        // 重置本地存储中的侧边栏状态，确保默认为展开状态
+        localStorage.removeItem('sidebarCollapsed');
+        console.log('重置侧边栏状态，确保默认为展开状态');
+        
+        // 确保侧边栏为展开状态
+        chatSidebar.classList.remove('collapsed');
+        console.log('侧边栏初始状态: 已展开');
+        
+        // 添加键盘快捷键支持
+        document.addEventListener('keydown', function(e) {
+            // Alt+S 切换侧边栏
+            if (e.altKey && e.key === 's') {
+                console.log('检测到快捷键: Alt+S');
+                toggleSidebar();
+                e.preventDefault();
+            }
+        });
+    }
+});

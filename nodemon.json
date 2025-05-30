@@ -1,0 +1,13 @@
+{
+  "verbose": true,
+  "ignore": ["projects/*", "node_modules/*", ".git/*"],
+  "watch": ["server.js", "js/", "css/", "index.html"],
+  "ext": "js,json,html,css",
+  "delay": "500",
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "events": {
+    "restart": "echo '应用已重启'"
+  }
+}

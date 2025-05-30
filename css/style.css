@@ -391,26 +391,28 @@ code {
 
 /* 设置按钮样式 */
 .settings-btn {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    z-index: 1100;
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     transition: all 0.3s ease;
-    background-color: #fff;
-    border: 1px solid #dee2e6;
+    background-color: rgba(255, 255, 255, 0.9);
+    border: none;
+    padding: 0;
+    margin-left: 10px;
 }
 
 .settings-btn:hover {
-    background-color: #f8f9fa;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-    transform: scale(1.05);
+    background-color: #fff;
+    transform: scale(1.1);
+}
+
+.settings-btn svg {
+    width: 18px;
+    height: 18px;
+    color: #4a6fdc;
 }
 
 /* 设置对话框样式 */

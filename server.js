@@ -5,7 +5,7 @@ const fs = require('fs');
 const { BedrockRuntimeClient, InvokeModelCommand } = require('@aws-sdk/client-bedrock-runtime');
 
 const app = express();
-const port = 3000;
+const port = 5678;
 
 // 创建保存文件的目录
 const projectsDir = path.join(__dirname, 'projects');
@@ -604,6 +604,133 @@ app.delete('/api/projects/:projectId', (req, res) => {
     res.json({ success: true, message: `项目 ${projectId} 已成功删除` });
   } catch (error) {
     console.error('Error deleting project:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+// 获取项目文件列表
+app.get('/api/projects/:projectId/files', (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { path: filePath = '' } = req.query;
+    
+    const projectPath = path.join(projectsDir, projectId);
+    const fullPath = path.join(projectPath, filePath);
+    
+    if (!fs.existsSync(projectPath)) {
+      return res.status(404).json({ success: false, error: '项目不存在' });
+    }
+    
+    if (!fs.existsSync(fullPath)) {
+      return res.status(404).json({ success: false, error: '路径不存在' });
+    }
+    
+    const stats = fs.statSync(fullPath);
+    
+    if (stats.isDirectory()) {
+      // 如果是目录，返回目录内容
+      const files = fs.readdirSync(fullPath)
+        .map(file => {
+          const fileStat = fs.statSync(path.join(fullPath, file));
+          return {
+            name: file,
+            type: fileStat.isDirectory() ? 'directory' : 'file',
+            size: fileStat.size,
+            modifiedAt: fileStat.mtime
+          };
+        })
+        .sort((a, b) => {
+          // 先按类型排序（目录在前），再按名称排序
+          if (a.type !== b.type) {
+            return a.type === 'directory' ? -1 : 1;
+          }
+          return a.name.localeCompare(b.name);
+        });
+      
+      res.json({ success: true, files });
+    } else {
+      // 如果是文件，返回文件信息
+      res.json({
+        success: true,
+        file: {
+          name: path.basename(fullPath),
+          type: 'file',
+          size: stats.size,
+          modifiedAt: stats.mtime
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Error getting project files:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 获取项目文件内容
+app.get('/api/projects/:projectId/files/content', (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { path: filePath = '' } = req.query;
+    
+    const projectPath = path.join(projectsDir, projectId);
+    const fullPath = path.join(projectPath, filePath);
+    
+    if (!fs.existsSync(projectPath)) {
+      return res.status(404).json({ success: false, error: '项目不存在' });
+    }
+    
+    if (!fs.existsSync(fullPath)) {
+      return res.status(404).json({ success: false, error: '文件不存在' });
+    }
+    
+    const stats = fs.statSync(fullPath);
+    
+    if (stats.isDirectory()) {
+      return res.status(400).json({ success: false, error: '不能获取目录内容' });
+    }
+    
+    // 读取文件内容
+    const content = fs.readFileSync(fullPath, 'utf8');
+    
+    res.json({ success: true, content });
+  } catch (error) {
+    console.error('Error getting file content:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 上传项目文件
+app.post('/api/projects/:projectId/files', (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { path: filePath, content } = req.body;
+    
+    if (!filePath) {
+      return res.status(400).json({ success: false, error: '缺少文件路径' });
+    }
+    
+    if (content === undefined) {
+      return res.status(400).json({ success: false, error: '缺少文件内容' });
+    }
+    
+    const projectPath = path.join(projectsDir, projectId);
+    const fullPath = path.join(projectPath, filePath);
+    
+    if (!fs.existsSync(projectPath)) {
+      return res.status(404).json({ success: false, error: '项目不存在' });
+    }
+    
+    // 确保目录存在
+    const dirPath = path.dirname(fullPath);
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+    
+    // 写入文件内容
+    fs.writeFileSync(fullPath, content);
+    
+    res.json({ success: true, message: '文件上传成功' });
+  } catch (error) {
+    console.error('Error uploading file:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

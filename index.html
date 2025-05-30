@@ -50,37 +50,65 @@
                 </div>
             </div>
             
-            <!-- 右侧预览区域 -->
-            <div class="col-8 preview-container">
-                <ul class="nav nav-tabs" id="previewTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="prd-tab" data-bs-toggle="tab" data-bs-target="#prd" type="button" role="tab" aria-controls="prd" aria-selected="true">PRD 预览</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="ui-tab" data-bs-toggle="tab" data-bs-target="#ui" type="button" role="tab" aria-controls="ui" aria-selected="false">UI 预览</button>
-                    </li>
-                </ul>
-                <div class="tab-content h-100" id="previewTabsContent">
-                    <div class="tab-pane fade show active h-100" id="prd" role="tabpanel" aria-labelledby="prd-tab">
-                        <div class="card h-100">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">PRD.md 预览</h5>
-                                <button class="btn btn-sm btn-outline-secondary" id="downloadPRD">下载 PRD</button>
-                            </div>
-                            <div class="card-body markdown-content" id="prdContent">
-                                <!-- PRD 内容将在这里显示 -->
-                                <p class="text-muted">请在左侧输入您的需求描述，AI将为您生成PRD文档...</p>
-                            </div>
+            <!-- 右侧文件浏览区域 -->
+            <div class="col-8 file-explorer-container">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <h5 class="mb-0">文件浏览器</h5>
+                            <nav aria-label="breadcrumb" class="ms-3">
+                                <ol class="breadcrumb mb-0" id="fileBreadcrumb">
+                                    <li class="breadcrumb-item active" aria-current="page">根目录</li>
+                                </ol>
+                            </nav>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline-secondary me-2" id="refreshFilesBtn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+                                    <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+                                </svg>
+                                刷新
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary" id="uploadFileBtn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-upload" viewBox="0 0 16 16">
+                                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                                    <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/>
+                                </svg>
+                                上传文件
+                            </button>
                         </div>
                     </div>
-                    <div class="tab-pane fade h-100" id="ui" role="tabpanel" aria-labelledby="ui-tab">
-                        <div class="card h-100">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">UI.html 预览</h5>
-                                <button class="btn btn-sm btn-outline-secondary" id="downloadUI">下载 UI</button>
+                    <div class="card-body p-0">
+                        <div class="file-explorer-split">
+                            <!-- 左侧文件列表 -->
+                            <div class="file-list-container">
+                                <div class="list-group list-group-flush" id="fileList">
+                                    <div class="file-list-empty text-center p-4 text-muted">
+                                        <p>请选择一个项目以查看文件</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="card-body" id="uiPreviewWrapper">
-                                <iframe id="uiPreview" class="w-100 h-100" srcdoc="<p>请在左侧输入您的需求描述，AI将为您生成UI界面...</p>" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-same-origin"></iframe>
+                            
+                            <!-- 右侧文件预览 -->
+                            <div class="file-preview-container">
+                                <div class="file-preview-header d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0" id="previewFileName">未选择文件</h6>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-secondary" id="downloadFileBtn" disabled>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
+                                                <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                                                <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                                            </svg>
+                                            下载
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="file-preview-content" id="filePreviewContent">
+                                    <div class="file-preview-placeholder text-center p-4 text-muted">
+                                        <p>选择一个文件以预览内容</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -98,8 +98,8 @@ body {
     display: block !important;
 }
 
-/* 确保预览区域始终可见 */
-.preview-container {
+/* 确保文件浏览器区域始终可见 */
+.file-explorer-container {
     transition: all 0.3s ease;
     background-color: #fff;
     display: flex;
@@ -107,17 +107,147 @@ body {
     height: 100%;
 }
 
-/* 确保tab内容区域正确显示 */
-.tab-content {
-    flex: 1;
+/* 文件浏览器分割布局 */
+.file-explorer-split {
     display: flex;
-    flex-direction: column;
-    height: calc(100% - 42px); /* 减去tab导航的高度 */
+    height: 100%;
     overflow: hidden;
 }
 
-.tab-pane {
+/* 左侧文件列表 */
+.file-list-container {
+    width: 30%;
     height: 100%;
+    overflow-y: auto;
+    border-right: 1px solid #dee2e6;
+}
+
+/* 右侧文件预览 */
+.file-preview-container {
+    width: 70%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.file-preview-header {
+    padding: 10px 15px;
+    border-bottom: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+}
+
+.file-preview-content {
+    flex: 1;
+    overflow: auto;
+    padding: 15px;
+}
+
+/* 文件列表项样式 */
+.file-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 15px;
+    border-bottom: 1px solid #f1f1f1;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.file-item:hover {
+    background-color: #f8f9fa;
+}
+
+.file-item.active {
+    background-color: #e9ecef;
+}
+
+.file-item-icon {
+    margin-right: 10px;
+    color: #6c757d;
+}
+
+.file-item-icon.folder {
+    color: #ffc107;
+}
+
+.file-item-icon.file {
+    color: #6c757d;
+}
+
+.file-item-icon.file-md {
+    color: #0d6efd;
+}
+
+.file-item-icon.file-html {
+    color: #fd7e14;
+}
+
+.file-item-icon.file-css {
+    color: #20c997;
+}
+
+.file-item-icon.file-js {
+    color: #ffc107;
+}
+
+.file-item-icon.file-json {
+    color: #6f42c1;
+}
+
+.file-item-icon.file-image {
+    color: #d63384;
+}
+
+.file-item-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 面包屑导航样式 */
+.breadcrumb {
+    margin-bottom: 0;
+    background-color: transparent;
+    padding: 0;
+}
+
+.breadcrumb-item a {
+    color: #0d6efd;
+    text-decoration: none;
+}
+
+.breadcrumb-item a:hover {
+    text-decoration: underline;
+}
+
+/* 文件预览样式 */
+.file-preview-content pre {
+    margin: 0;
+    padding: 15px;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+    overflow-x: auto;
+}
+
+.file-preview-content img {
+    max-width: 100%;
+    height: auto;
+}
+
+.file-preview-content iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* 文件预览占位符 */
+.file-preview-placeholder,
+.file-list-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #6c757d;
 }
 
 .card.h-100 {
@@ -423,4 +553,18 @@ code {
 .modal-body textarea {
     font-family: monospace;
     font-size: 14px;
+}
+/* 返回上级目录按钮样式 */
+.back-item {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    font-weight: 500;
+}
+
+.back-item:hover {
+    background-color: #e9ecef;
+}
+
+.back-item .file-item-icon {
+    color: #0d6efd;
 }

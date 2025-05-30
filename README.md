@@ -29,7 +29,7 @@ npm start
 
 3. 在浏览器中访问：
 ```
-http://localhost:3000
+http://localhost:5678
 ```
 
 4. 停止服务：

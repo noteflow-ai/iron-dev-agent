@@ -39,6 +39,9 @@ document.addEventListener('DOMContentLoaded', function() {
         chatMessages.scrollTop = chatMessages.scrollHeight;
         
         try {
+            // 获取系统提示词（如果有设置）
+            const customSystemPrompt = window.getSystemPrompt ? window.getSystemPrompt(type) : null;
+            
             // 调用后端API
             const response = await fetch('/api/claude', {
                 method: 'POST',
@@ -49,7 +52,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     prompt, 
                     type,
                     projectId: currentProjectId,
-                    previousContent: type === 'prd' ? currentPRD : currentUI
+                    previousContent: type === 'prd' ? currentPRD : currentUI,
+                    systemPrompt: customSystemPrompt
                 }),
             });
             

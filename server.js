@@ -5,13 +5,19 @@ const fs = require('fs');
 const { BedrockRuntimeClient, InvokeModelCommand } = require('@aws-sdk/client-bedrock-runtime');
 
 const app = express();
-const port = 3000;
+const port = 5678;
 
 // 创建保存文件的目录
 const projectsDir = path.join(__dirname, 'projects');
 if (!fs.existsSync(projectsDir)) {
   fs.mkdirSync(projectsDir, { recursive: true });
 }
+
+// 登录凭据
+const validCredentials = {
+  username: 'chuyi',
+  password: 'chuyi.123456'
+};
 
 // 配置AWS Bedrock客户端
 const bedrockClient = new BedrockRuntimeClient({
@@ -22,10 +28,50 @@ const bedrockClient = new BedrockRuntimeClient({
 app.use(express.static(path.join(__dirname)));
 app.use(bodyParser.json());
 
+// 登录验证中间件
+const authMiddleware = (req, res, next) => {
+  // API登录端点不需要验证
+  if (req.path === '/api/login') {
+    return next();
+  }
+  
+  // 检查Authorization头
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Basic ')) {
+    return res.status(401).json({ success: false, error: '未授权访问' });
+  }
+  
+  // 解析Basic认证
+  const base64Credentials = authHeader.split(' ')[1];
+  const credentials = Buffer.from(base64Credentials, 'base64').toString('utf-8');
+  const [username, password] = credentials.split(':');
+  
+  // 验证凭据
+  if (username === validCredentials.username && password === validCredentials.password) {
+    next();
+  } else {
+    res.status(401).json({ success: false, error: '用户名或密码错误' });
+  }
+};
+
+// 登录API
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body;
+  
+  if (username === validCredentials.username && password === validCredentials.password) {
+    res.json({ success: true });
+  } else {
+    res.json({ success: false, error: '用户名或密码错误' });
+  }
+});
+
+// 应用认证中间件到所有API路由
+app.use('/api', authMiddleware);
+
 // Claude API调用端点
 app.post('/api/claude', async (req, res) => {
   try {
-    const { prompt, type, projectId, previousContent } = req.body;
+    const { prompt, type, projectId, previousContent, systemPrompt } = req.body;
     
     // 创建或获取项目目录
     const projectDir = projectId ? 
@@ -55,9 +101,9 @@ app.post('/api/claude', async (req, res) => {
     const contentToModify = previousContent || existingContent;
     
     // 根据请求类型构建不同的提示
-    let systemPrompt = '';
+    let defaultSystemPrompt = '';
     if (type === 'prd') {
-      systemPrompt = contentToModify ? 
+      defaultSystemPrompt = contentToModify ? 
         `你是Q Developer，一位资深的产品经理，拥有丰富的产品设计和需求分析经验。请根据用户的新需求，对现有PRD文档进行增量修改和完善。
 
 请遵循以下原则创建专业、全面且详细的产品需求文档：
@@ -230,7 +276,7 @@ app.post('/api/claude', async (req, res) => {
 
 请根据用户需求，创建一份专业、详细且结构清晰的PRD文档。使用具体的例子、数据和图表来支持你的分析和建议。确保文档内容具体、可衡量、可实现、相关且有时限。`;
     } else if (type === 'ui') {
-      systemPrompt = contentToModify ?
+      defaultSystemPrompt = contentToModify ?
         `你是Q Developer，一位专业的UI设计师。请根据用户的新需求，对现有HTML界面原型进行增量修改和完善。
 
 请创建一个可交互的静态HTML原型，而不是React TypeScript代码。遵循以下原则：
@@ -312,167 +358,11 @@ app.post('/api/claude', async (req, res) => {
 4. 至少一个交互组件（标签页、手风琴、轮播等）
 5. 页脚区域（包含版权信息、链接等）
 
-## 示例代码结构
-\`\`\`html
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UI原型</title>
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <style>
-        /* 自定义样式 */
-        :root {
-            --primary-color: #4a6fdc;
-            --secondary-color: #6c757d;
-            --accent-color: #ffc107;
-            --text-color: #333333;
-            --light-bg: #f8f9fa;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: var(--text-color);
-            line-height: 1.6;
-        }
-        
-        .hero-section {
-            background-color: var(--light-bg);
-            padding: 5rem 0;
-        }
-        
-        .feature-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            margin-bottom: 1.5rem;
-            border-radius: 0.5rem;
-            overflow: hidden;
-            border: none;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-        }
-        
-        .btn-primary {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-        
-        .btn-primary:hover {
-            background-color: #3a5bb9;
-            border-color: #3a5bb9;
-        }
-    </style>
-</head>
-<body>
-    <!-- 导航栏 -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-        <div class="container">
-            <a class="navbar-brand" href="#">Brand Name</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#">首页</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">功能</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">价格</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">关于我们</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="btn btn-primary ms-2" href="#">立即注册</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <!-- 主要内容区域 -->
-    <main>
-        <!-- 在这里添加页面主要内容 -->
-    </main>
-
-    <!-- 页脚 -->
-    <footer class="bg-dark text-white py-4 mt-5">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <h5>Brand Name</h5>
-                    <p>简短的公司描述或口号</p>
-                </div>
-                <div class="col-md-3">
-                    <h5>链接</h5>
-                    <ul class="list-unstyled">
-                        <li><a href="#" class="text-white">首页</a></li>
-                        <li><a href="#" class="text-white">功能</a></li>
-                        <li><a href="#" class="text-white">价格</a></li>
-                        <li><a href="#" class="text-white">关于我们</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-3">
-                    <h5>联系我们</h5>
-                    <ul class="list-unstyled">
-                        <li><i class="bi bi-envelope"></i> info@example.com</li>
-                        <li><i class="bi bi-telephone"></i> +123 456 7890</li>
-                    </ul>
-                </div>
-            </div>
-            <hr>
-            <div class="text-center">
-                <p>&copy; 2025 Brand Name. 保留所有权利。</p>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Bootstrap 5 JS Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // 简单的表单验证示例
-        document.addEventListener('DOMContentLoaded', function() {
-            const forms = document.querySelectorAll('.needs-validation');
-            
-            Array.from(forms).forEach(form => {
-                form.addEventListener('submit', event => {
-                    if (!form.checkValidity()) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    } else {
-                        event.preventDefault();
-                        alert('表单提交成功！在实际应用中，这里会处理表单数据。');
-                    }
-                    
-                    form.classList.add('was-validated');
-                }, false);
-            });
-            
-            // 按钮点击事件示例
-            const actionButtons = document.querySelectorAll('.action-button');
-            actionButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    alert('您点击了: ' + this.textContent);
-                });
-            });
-        });
-    </script>
-</body>
-</html>
-\`\`\`
-
 请根据用户需求创建完整的HTML原型，包括必要的样式和交互功能。只返回完整的HTML代码，不要有任何解释。确保代码可以直接在浏览器中运行，所有交互功能正常工作。`;
     }
+    
+    // 使用提供的系统提示词或默认提示词
+    const finalSystemPrompt = systemPrompt || defaultSystemPrompt;
     
     // 调用Claude API
     const params = {
@@ -482,7 +372,7 @@ app.post('/api/claude', async (req, res) => {
       body: JSON.stringify({
         anthropic_version: 'bedrock-2023-05-31',
         max_tokens: 100000, // 增加到最大token数
-        system: systemPrompt,
+        system: finalSystemPrompt,
         messages: [
           {
             role: 'user',

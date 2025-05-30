@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const port = 3000;
+const port = 5678;
 
 app.get('/', (req, res) => {
   res.send('Hello World! 测试服务器正常运行中');

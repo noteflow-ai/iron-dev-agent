@@ -10,6 +10,22 @@ body {
     transition: all 0.3s ease;
 }
 
+/* 用户控制区域样式 */
+.user-controls {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+#userInfo {
+    font-weight: 500;
+}
+
+#logoutBtn {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.5rem;
+}
+
 /* 侧边栏收起状态 */
 .chat-container.collapsed {
     flex: 0 0 0%;

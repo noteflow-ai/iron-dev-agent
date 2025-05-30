@@ -19,6 +19,32 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentUI = '';
     let currentProjectId = '';
     
+    // 默认系统提示词
+    const DEFAULT_PRD_SYSTEM_PROMPT = `你是一位专业的产品经理，擅长将用户需求转化为清晰的PRD文档。
+请根据用户的需求描述，生成一份详细的PRD文档，包括但不限于：
+1. 产品概述
+2. 用户需求分析
+3. 功能规格
+4. 用户界面要求
+5. 非功能性需求
+6. 里程碑和交付计划
+
+请使用Markdown格式输出，确保文档结构清晰，内容全面。`;
+
+    const DEFAULT_UI_SYSTEM_PROMPT = `你是一位专业的UI设计师和前端开发工程师，擅长将产品需求转化为美观实用的界面。
+请根据用户的需求描述，生成一份HTML界面原型，要求：
+1. 使用HTML5、CSS3和基础JavaScript
+2. 界面美观、简洁，符合现代设计趋势
+3. 具有基本的交互功能
+4. 响应式设计，适配不同设备
+5. 代码整洁，结构清晰
+
+请直接输出完整的HTML代码，包括内联的CSS和JavaScript。`;
+
+    // 当前使用的系统提示词
+    let currentPRDSystemPrompt = DEFAULT_PRD_SYSTEM_PROMPT;
+    let currentUISystemPrompt = DEFAULT_UI_SYSTEM_PROMPT;
+    
     console.log('初始化UI组件...');
     
     // 初始化滚动到底部按钮
@@ -29,6 +55,74 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 不需要在这里调用loadProjects，因为在外部已经调用了
 
+    // 初始化设置
+    initSettings();
+    
+    // 初始化设置功能
+    function initSettings() {
+        console.log('初始化设置功能...');
+        
+        // 获取设置相关的DOM元素
+        const settingsBtn = document.getElementById('settingsBtn');
+        const prdSystemPromptTextarea = document.getElementById('prdSystemPrompt');
+        const uiSystemPromptTextarea = document.getElementById('uiSystemPrompt');
+        const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+        
+        // 从本地存储加载系统提示词
+        const savedPRDPrompt = localStorage.getItem('prdSystemPrompt');
+        const savedUIPrompt = localStorage.getItem('uiSystemPrompt');
+        
+        // 如果有保存的系统提示词，则使用它们
+        if (savedPRDPrompt) {
+            currentPRDSystemPrompt = savedPRDPrompt;
+            console.log('从本地存储加载PRD系统提示词');
+        }
+        
+        if (savedUIPrompt) {
+            currentUISystemPrompt = savedUIPrompt;
+            console.log('从本地存储加载UI系统提示词');
+        }
+        
+        // 点击设置按钮，显示设置对话框
+        settingsBtn.addEventListener('click', function() {
+            // 在对话框中显示当前的系统提示词
+            prdSystemPromptTextarea.value = currentPRDSystemPrompt;
+            uiSystemPromptTextarea.value = currentUISystemPrompt;
+            
+            // 显示设置对话框
+            const settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
+            settingsModal.show();
+        });
+        
+        // 点击保存设置按钮
+        saveSettingsBtn.addEventListener('click', function() {
+            // 获取用户输入的系统提示词
+            const newPRDPrompt = prdSystemPromptTextarea.value.trim();
+            const newUIPrompt = uiSystemPromptTextarea.value.trim();
+            
+            // 如果用户输入为空，则使用默认值
+            currentPRDSystemPrompt = newPRDPrompt || DEFAULT_PRD_SYSTEM_PROMPT;
+            currentUISystemPrompt = newUIPrompt || DEFAULT_UI_SYSTEM_PROMPT;
+            
+            // 保存到本地存储
+            localStorage.setItem('prdSystemPrompt', currentPRDSystemPrompt);
+            localStorage.setItem('uiSystemPrompt', currentUISystemPrompt);
+            
+            console.log('系统提示词已保存到本地存储');
+            
+            // 关闭设置对话框
+            const settingsModal = bootstrap.Modal.getInstance(document.getElementById('settingsModal'));
+            settingsModal.hide();
+            
+            // 显示保存成功消息
+            const saveMessage = document.createElement('div');
+            saveMessage.className = 'message system-message';
+            saveMessage.textContent = '系统提示词设置已保存。';
+            chatMessages.appendChild(saveMessage);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+    }
+    
     // 调用API的函数
     async function callClaudeAPI(prompt, type) {
         // 显示思考中的消息
@@ -39,6 +133,9 @@ document.addEventListener('DOMContentLoaded', function() {
         chatMessages.scrollTop = chatMessages.scrollHeight;
         
         try {
+            // 使用当前设置的系统提示词
+            const systemPrompt = type === 'prd' ? currentPRDSystemPrompt : currentUISystemPrompt;
+            
             // 调用后端API
             const response = await fetch('/api/claude', {
                 method: 'POST',
@@ -48,6 +145,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({ 
                     prompt, 
                     type,
+                    systemPrompt, // 添加系统提示词
                     projectId: currentProjectId,
                     previousContent: type === 'prd' ? currentPRD : currentUI
                 }),

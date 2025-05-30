@@ -436,6 +436,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 sidebarToggleFixed.style.display = 'flex';
             } else {
                 console.log('侧边栏已展开');
+                // 确保固定按钮隐藏
+                sidebarToggleFixed.style.display = 'none';
             }
         }
         
@@ -457,6 +459,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 确保侧边栏为展开状态
         chatSidebar.classList.remove('collapsed');
+        // 确保固定按钮隐藏
+        sidebarToggleFixed.style.display = 'none';
         console.log('侧边栏初始状态: 已展开');
         
         // 添加键盘快捷键支持

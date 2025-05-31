@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Favicon Generator</title>
+</head>
+<body>
+    <canvas id="favicon" width="32" height="32"></canvas>
+    <script>
+        // 创建一个简单的favicon
+        const canvas = document.getElementById('favicon');
+        const ctx = canvas.getContext('2d');
+        
+        // 绘制背景
+        ctx.fillStyle = '#4a6fdc';
+        ctx.fillRect(0, 0, 32, 32);
+        
+        // 绘制字母P
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 24px Arial';
+        ctx.fillText('P', 8, 24);
+        
+        // 将canvas转换为base64编码的图片
+        const dataUrl = canvas.toDataURL('image/png');
+        
+        // 创建一个链接，用于下载favicon
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = 'favicon.ico';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    </script>
+    <p>请将生成的图片保存为favicon.ico</p>
+</body>
+</html>

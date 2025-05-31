@@ -3,6 +3,9 @@
 # 切换到项目目录
 cd "$(dirname "$0")"
 
+# 设置环境变量
+export NODE_ENV=legacy
+
 # 在后台启动服务器
 nohup node server.js > server.log 2>&1 &
 

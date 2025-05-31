@@ -48,11 +48,11 @@ stop_all_processes() {
         echo "未发现nodemon进程"
     fi
     
-    # 查找占用5678端口的进程
+    # 查找占用3000端口的进程
     if command -v lsof &> /dev/null; then
-        PORT_PIDS=$(lsof -t -i:5678 2>/dev/null || echo "")
+        PORT_PIDS=$(lsof -t -i:3000 2>/dev/null || echo "")
         if [ ! -z "$PORT_PIDS" ]; then
-            echo "发现以下进程占用端口5678: $PORT_PIDS"
+            echo "发现以下进程占用端口3000: $PORT_PIDS"
             for PID in $PORT_PIDS; do
                 echo "正在终止端口占用进程 $PID..."
                 kill $PID 2>/dev/null || echo "无法终止进程 $PID，尝试强制终止..."
@@ -65,12 +65,12 @@ stop_all_processes() {
             done
             found_processes=true
         else
-            echo "未发现进程占用端口5678"
+            echo "未发现进程占用端口3000"
         fi
     elif command -v netstat &> /dev/null; then
-        PORT_PIDS=$(netstat -nlp 2>/dev/null | grep ':5678 ' | awk '{print $7}' | cut -d'/' -f1 || echo "")
+        PORT_PIDS=$(netstat -nlp 2>/dev/null | grep ':3000 ' | awk '{print $7}' | cut -d'/' -f1 || echo "")
         if [ ! -z "$PORT_PIDS" ]; then
-            echo "发现以下进程占用端口5678: $PORT_PIDS"
+            echo "发现以下进程占用端口3000: $PORT_PIDS"
             for PID in $PORT_PIDS; do
                 echo "正在终止端口占用进程 $PID..."
                 kill $PID 2>/dev/null || echo "无法终止进程 $PID，尝试强制终止..."
@@ -83,7 +83,7 @@ stop_all_processes() {
             done
             found_processes=true
         else
-            echo "未发现进程占用端口5678"
+            echo "未发现进程占用端口3000"
         fi
     fi
     
@@ -104,17 +104,17 @@ sleep 2
 # 最后检查端口是否已释放
 PORT_IN_USE=false
 if command -v lsof &> /dev/null; then
-    lsof -i:5678 &>/dev/null && PORT_IN_USE=true
+    lsof -i:3000 &>/dev/null && PORT_IN_USE=true
 elif command -v netstat &> /dev/null; then
-    netstat -an | grep ":5678 " &>/dev/null && PORT_IN_USE=true
+    netstat -an | grep ":3000 " &>/dev/null && PORT_IN_USE=true
 elif command -v ss &> /dev/null; then
-    ss -ln | grep ":5678 " &>/dev/null && PORT_IN_USE=true
+    ss -ln | grep ":3000 " &>/dev/null && PORT_IN_USE=true
 fi
 
 if [ "$PORT_IN_USE" = true ]; then
-    echo "警告: 端口5678仍然被占用，可能需要手动检查"
+    echo "警告: 端口3000仍然被占用，可能需要手动检查"
 else
-    echo "端口5678已成功释放"
+    echo "端口3000已成功释放"
 fi
 
 echo "停止操作完成"

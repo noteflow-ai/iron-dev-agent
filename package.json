@@ -1,19 +1,33 @@
 {
-  "name": "prd-ui-generator",
+  "name": "iron-dev-agent",
   "version": "1.0.0",
-  "description": "PRD和UI生成器，通过与Claude 3.7交互生成专业预览",
+  "description": "Iron端到端开发Agent，覆盖全开发生命周期",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "hot": "nodemon --watch server.js --watch js --watch css --ignore projects/ server.js"
+    "hot": "nodemon --watch server.js --watch js --watch css --ignore projects/ server.js",
+    "client": "cd client && npm start",
+    "client-build": "cd client && npm run build",
+    "install-all": "npm install && cd client && npm install",
+    "dev-full": "concurrently \"npm run dev\" \"npm run client\""
   },
   "dependencies": {
-    "express": "^4.18.2",
     "@aws-sdk/client-bedrock-runtime": "^3.515.0",
-    "body-parser": "^1.20.2"
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^7.8.7",
+    "morgan": "^1.10.0",
+    "simple-git": "^3.19.1",
+    "socket.io": "^4.7.2",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "concurrently": "^8.2.1",
     "nodemon": "^3.0.3"
   }
 }

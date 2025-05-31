@@ -16,22 +16,22 @@ echo "步骤2: 检查端口状态..."
 # 检查端口是否仍然被占用
 PORT_IN_USE=false
 if command -v lsof &> /dev/null; then
-    lsof -i:5678 &>/dev/null && PORT_IN_USE=true
+    lsof -i:3000 &>/dev/null && PORT_IN_USE=true
 elif command -v netstat &> /dev/null; then
-    netstat -an | grep ":5678 " &>/dev/null && PORT_IN_USE=true
+    netstat -an | grep ":3000 " &>/dev/null && PORT_IN_USE=true
 elif command -v ss &> /dev/null; then
-    ss -ln | grep ":5678 " &>/dev/null && PORT_IN_USE=true
+    ss -ln | grep ":3000 " &>/dev/null && PORT_IN_USE=true
 fi
 
 # 如果端口仍然被占用，尝试强制停止
 if [ "$PORT_IN_USE" = true ]; then
-    echo "警告: 端口5678仍然被占用，尝试强制停止..."
+    echo "警告: 端口3000仍然被占用，尝试强制停止..."
     
     # 尝试使用lsof（如果可用）
     if command -v lsof &> /dev/null; then
-        PIDS=$(lsof -t -i:5678 2>/dev/null || echo "")
+        PIDS=$(lsof -t -i:3000 2>/dev/null || echo "")
         if [ ! -z "$PIDS" ]; then
-            echo "发现以下进程占用端口5678: $PIDS"
+            echo "发现以下进程占用端口3000: $PIDS"
             for PID in $PIDS; do
                 echo "正在强制终止进程 $PID..."
                 kill -9 $PID 2>/dev/null || echo "无法终止进程 $PID"
@@ -48,5 +48,5 @@ echo "步骤3: 启动服务..."
 ./start.sh
 
 echo "服务已重启完成"
-echo "访问 http://localhost:5678 使用应用"
+echo "访问 http://localhost:3000 使用应用"
 echo "如需热部署模式，请运行 ./hot-start.sh"

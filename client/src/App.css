@@ -1,0 +1,229 @@
+/* Main layout styles */
+.sidebar {
+  width: 250px;
+  height: 100%;
+  transition: all 0.3s;
+  overflow-y: auto;
+  border-right: 1px solid #dee2e6;
+}
+
+.sidebar.collapsed {
+  width: 0;
+  overflow: hidden;
+}
+
+.main-content {
+  flex: 1;
+  transition: all 0.3s;
+  overflow-y: auto;
+  height: calc(100vh - 56px);
+}
+
+.main-content.expanded {
+  margin-left: 0;
+}
+
+.sidebar-toggle {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-heading {
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.1rem;
+}
+
+/* Chat styles */
+.chat-messages {
+  display: flex;
+  flex-direction: column;
+}
+
+.message {
+  margin-bottom: 15px;
+  padding: 10px 15px;
+  border-radius: 10px;
+  max-width: 80%;
+}
+
+.user-message {
+  background-color: #e9ecef;
+  margin-left: auto;
+  text-align: left;
+  align-self: flex-end;
+}
+
+.ai-message {
+  background-color: #f8f9fa;
+  margin-right: auto;
+  text-align: left;
+  align-self: flex-start;
+}
+
+/* Markdown content styles */
+.markdown-content {
+  padding: 1rem;
+}
+
+.markdown-content h1 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+
+.markdown-content h2 {
+  font-size: 1.5rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.markdown-content h3 {
+  font-size: 1.2rem;
+  margin-top: 1.2rem;
+  margin-bottom: 0.6rem;
+}
+
+.markdown-content p {
+  margin-bottom: 1rem;
+}
+
+.markdown-content ul, .markdown-content ol {
+  margin-bottom: 1rem;
+  padding-left: 2rem;
+}
+
+.markdown-content table {
+  width: 100%;
+  margin-bottom: 1rem;
+  border-collapse: collapse;
+}
+
+.markdown-content table th,
+.markdown-content table td {
+  padding: 0.5rem;
+  border: 1px solid #dee2e6;
+}
+
+.markdown-content table th {
+  background-color: #f8f9fa;
+}
+
+.markdown-content pre {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 0.25rem;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+.markdown-content code {
+  font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.875em;
+  color: #d63384;
+  word-wrap: break-word;
+}
+
+.markdown-content pre code {
+  color: inherit;
+}
+
+/* Card styles */
+.card {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Form styles */
+.form-control:focus {
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Button styles */
+.btn-primary {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+  background-color: #0b5ed7;
+  border-color: #0a58ca;
+}
+
+/* Badge styles */
+.badge {
+  font-weight: 500;
+}
+
+/* Progress bar styles */
+.progress {
+  height: 0.5rem;
+  border-radius: 0.25rem;
+}
+
+/* Tab styles */
+.nav-tabs .nav-link {
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #6c757d;
+}
+
+.nav-tabs .nav-link:hover {
+  border-color: transparent;
+  color: #0d6efd;
+}
+
+.nav-tabs .nav-link.active {
+  border-color: #0d6efd;
+  color: #0d6efd;
+  background-color: transparent;
+}
+
+/* Spinner styles */
+.spinner-border {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* Alert styles */
+.alert {
+  margin-bottom: 1rem;
+}
+
+/* Table styles */
+.table {
+  margin-bottom: 0;
+}
+
+/* Modal styles */
+.modal-header {
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    position: fixed;
+    z-index: 1000;
+    top: 56px;
+    left: 0;
+    height: calc(100vh - 56px);
+    transform: translateX(-100%);
+  }
+  
+  .sidebar.show {
+    transform: translateX(0);
+  }
+  
+  .main-content {
+    margin-left: 0;
+  }
+}

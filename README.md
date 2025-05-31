@@ -1,4 +1,4 @@
-# PRD & UI 生成器
+# Iron端到端智能开发平台
 
 这是一个精简的Web服务，通过与AWS Bedrock Q Developer大模型交互，生成专业的PRD文档和UI界面预览。
 

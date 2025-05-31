@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 添加欢迎消息
     const welcomeMessage = document.createElement('div');
     welcomeMessage.className = 'message bot-message';
-    welcomeMessage.textContent = '欢迎使用PRD & UI生成器！我是Q Developer，请描述您的产品需求，我将帮您生成PRD文档和UI界面预览。';
+    welcomeMessage.textContent = '欢迎使用端到端智能开发平台！我是Iron，请描述您的产品需求，我将帮您生成PRD文档和UI界面预览。';
     chatMessages.appendChild(welcomeMessage);
     
     // 确保滚动到底部
@@ -504,17 +504,47 @@ async function callClaudeArtifactAPIStream(prdContent) {
                                             50% { opacity: 0; }
                                         }
                                     </style>
+                                    <script>
+                                        // 添加自动滚动功能
+                                        window.onload = function() {
+                                            const codeContainer = document.querySelector('.code-container');
+                                            if (codeContainer) {
+                                                codeContainer.scrollTop = codeContainer.scrollHeight;
+                                            }
+                                        }
+                                        
+                                        // 监听内容变化，保持滚动到底部
+                                        const observer = new MutationObserver(function(mutations) {
+                                            const codeContainer = document.querySelector('.code-container');
+                                            if (codeContainer) {
+                                                codeContainer.scrollTop = codeContainer.scrollHeight;
+                                            }
+                                        });
+                                        
+                                        // 页面加载后开始观察
+                                        window.addEventListener('DOMContentLoaded', function() {
+                                            const codeContainer = document.querySelector('.code-container');
+                                            if (codeContainer) {
+                                                observer.observe(codeContainer, { 
+                                                    childList: true,
+                                                    characterData: true,
+                                                    subtree: true 
+                                                });
+                                                codeContainer.scrollTop = codeContainer.scrollHeight;
+                                            }
+                                        });
+                                    </script>
                                 </head>
                                 <body>
                                     <div class="code-header">
                                         <span>UI原型代码生成中...</span>
-                                        <span class="badge bg-light text-dark">${Math.round(fullContent.length / 100)}%</span>
+                                        <span class="badge bg-light text-dark">${Math.min(Math.round((fullContent.length / 50000) * 100), 100)}%</span>
                                     </div>
                                     <div class="code-container">${escapeHtml(fullContent)}<span class="blinking-cursor"></span></div>
                                     <div class="progress-container">
                                         <div class="progress">
-                                            <div class="progress-bar" role="progressbar" style="width: ${Math.min(fullContent.length / 100, 100)}%" 
-                                                aria-valuenow="${Math.min(fullContent.length / 100, 100)}" aria-valuemin="0" aria-valuemax="100"></div>
+                                            <div class="progress-bar" role="progressbar" style="width: ${Math.min((fullContent.length / 50000) * 100, 100)}%" 
+                                                aria-valuenow="${Math.min((fullContent.length / 50000) * 100, 100)}" aria-valuemin="0" aria-valuemax="100"></div>
                                         </div>
                                     </div>
                                 </body>
@@ -523,6 +553,18 @@ async function callClaudeArtifactAPIStream(prdContent) {
                                 
                                 // 更新预览
                                 uiPreview.srcdoc = previewHtml;
+                                
+                                // 确保iframe内容加载后滚动到底部
+                                uiPreview.onload = function() {
+                                    try {
+                                        const codeContainer = uiPreview.contentDocument.querySelector('.code-container');
+                                        if (codeContainer) {
+                                            codeContainer.scrollTop = codeContainer.scrollHeight;
+                                        }
+                                    } catch (e) {
+                                        console.error('Error scrolling iframe content:', e);
+                                    }
+                                };
                             } else if (data.type === 'done') {
                                 // 完成生成
                                 window.currentUI = data.content;

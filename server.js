@@ -47,13 +47,21 @@ async function setupProject(projectId, type) {
 function getSystemPrompt(type, contentToModify, customPrompt) {
   let defaultPrompt = '';
   
+  // 根据类型和是否有现有内容选择提示词
   if (type === 'prd') {
-    defaultPrompt = prompts.prd.prompt;
+    // 如果有现有内容，使用编辑提示词；否则使用创建提示词
+    defaultPrompt = contentToModify ? 
+      prompts.prd.edit : 
+      prompts.prd.create;
   } else if (type === 'ui') {
-    defaultPrompt = prompts.ui.prompt;
+    // 如果有现有内容，使用编辑提示词；否则使用创建提示词
+    defaultPrompt = contentToModify ? 
+      prompts.ui.edit : 
+      prompts.ui.create;
   }
   
-  return customPrompt || defaultPrompt;
+  // 如果有自定义提示词，追加到默认提示词后面，而不是替换
+  return customPrompt ? `${defaultPrompt}\n\n${customPrompt}` : defaultPrompt;
 }
 
 // 创建保存文件的目录
@@ -229,6 +237,17 @@ app.post('/api/claude/stream', async (req, res) => {
     // 使用previousContent参数或文件中的内容
     const contentToModify = previousContent || existingContent;
     
+    // 如果是修改现有内容，将现有内容添加到提示中
+    let userPrompt = prompt;
+    if (contentToModify) {
+      if (type === 'prd') {
+        userPrompt = `现有PRD文档内容：\n\n${contentToModify}\n\n用户的新需求：\n\n${prompt}`;
+      } else if (type === 'ui') {
+        // 对于UI修改，直接传递用户的修改需求，不添加评估
+        userPrompt = `现有UI原型代码：\n\n${contentToModify}\n\n用户的修改需求：\n\n${prompt}\n\n请直接按照用户的要求进行修改，不要进行任何形式的评估或建议，只返回修改后的完整HTML代码。`;
+      }
+    }
+    
     // 获取系统提示词
     const finalSystemPrompt = getSystemPrompt(type, contentToModify, systemPrompt);
     
@@ -251,7 +270,7 @@ app.post('/api/claude/stream', async (req, res) => {
               content: [
                 {
                   type: 'text',
-                  text: prompt
+                  text: userPrompt
                 }
               ]
             }
@@ -330,7 +349,21 @@ app.post('/api/claude/artifact', async (req, res) => {
     const contentToModify = previousContent || existingContent;
     
     // 获取系统提示词
-    const finalSystemPrompt = systemPrompt || prompts.ui.prompt;
+    const finalSystemPrompt = systemPrompt ? `${contentToModify ? prompts.ui.edit : prompts.ui.create}\n\n${systemPrompt}` : (contentToModify ? prompts.ui.edit : prompts.ui.create);
+    
+    // 如果是修改现有内容，将现有内容添加到提示中
+    let userPrompt = prompt;
+    if (contentToModify) {
+      // 检查是否有关联的PRD文件
+      const prdFilePath = path.join(projectDir, 'PRD.md');
+      let prdContent = '';
+      if (fs.existsSync(prdFilePath)) {
+        prdContent = fs.readFileSync(prdFilePath, 'utf8');
+        userPrompt = `现有UI原型代码：\n\n${contentToModify}\n\n最新PRD文档：\n\n${prdContent}\n\n用户的修改需求：\n\n${prompt}\n\n请直接按照用户的要求进行修改，不要进行任何形式的评估或建议，只返回修改后的完整HTML代码。`;
+      } else {
+        userPrompt = `现有UI原型代码：\n\n${contentToModify}\n\n用户的修改需求：\n\n${prompt}\n\n请直接按照用户的要求进行修改，不要进行任何形式的评估或建议，只返回修改后的完整HTML代码。`;
+      }
+    }
 
     // 设置SSE响应头
     res.writeHead(200, {
@@ -358,71 +391,10 @@ app.post('/api/claude/artifact', async (req, res) => {
               content: [
                 {
                   type: 'text',
-                  text: `请基于以下PRD需求。创建一个单页应用，严格满足以下规范：
-                  
-                    #确保PRD里的功能都已经被覆盖，包括细节到字段，只返回完整的HTML代码，不要有任何解释。确保代码可以直接在浏览器中运行，所有交互功能正常工作。
-                  
-                    ## 设计原则
-                    1. 简洁明了的视觉设计，突出重点内容
-                    2. 响应式布局，适配不同设备
-                    3. 符合行业最佳实践的用户体验
-                    4. 合理的色彩方案和排版
-                    5. 清晰的视觉层次和导航结构
-
-                    ## 技术要求
-                    1. 使用纯HTML、CSS和简单的JavaScript
-                    2. 使用Bootstrap 5框架确保响应式设计和专业外观
-                    3. 确保代码简洁、高效、易于理解
-                    4. 使用相对单位(rem, em, %)而非绝对单位(px)
-                    5. 移动端优先的响应式设计
-
-                    ## 链接处理
-                    1. 不要使用href="#"，这会导致页面跳转
-                    2. 对于页面内导航，使用data-navigate属性指定目标页面
-                    3. 对于功能按钮，使用javascript:void(0)或者onClick事件处理
-                    4. 所有链接必须阻止默认行为，使用e.preventDefault()
-                    5. 确保链接点击不会导致页面刷新或跳转
-
-                    ## 交互功能
-                    1. 确保所有按钮和链接有明确的交互反馈（悬停效果、点击状态）
-                    2. 为按钮添加简单的点击事件处理函数（使用自定义函数模拟实际功能）
-                    3. 链接应该使用data-navigate属性或javascript:void(0)，避免使用href="#"
-                    4. 表单应该有基本的验证功能（必填字段检查、格式验证）
-                    5. 添加适当的悬停效果和状态变化（:hover, :active, :focus）
-                    6. 实现简单的标签页、折叠面板等交互组件
-                    7. 实现页面间的导航功能，点击链接可以切换到对应页面
-                    8. 表单应该有基本的验证功能（必填字段检查、格式验证）
-                    9. 实现标签页、折叠面板、模态框等交互组件
-                    10. 实现数据的增删改查操作的模拟
-
-                    ## 多页面实现
-                    1. 使用单页面应用的方式模拟多页面功能
-                    2. 实现主页、列表页、详情页、表单页等PRD中提到的所有页面类型
-                    3. 使用JavaScript控制页面切换，保持URL不变
-                    4. 所有页面内容都应包含在同一个HTML文件中
-                    5. 使用CSS控制不同页面的显示和隐藏
-
-                    ## 视觉设计
-                    1. 使用一致的配色方案（主色、辅助色、强调色）
-                    2. 运用适当的留白增强可读性
-                    3. 文字层次分明（标题、副标题、正文、说明文字）
-                    4. 使用高质量的图标和图片资源（可使用Bootstrap图标或Font Awesome）
-                    5. 确保足够的对比度，提高可访问性
-
-                    ## 必须包含的元素
-                    1. 响应式导航栏（在移动设备上折叠为汉堡菜单）
-                    2. 醒目的主标题和号召性用语(CTA)按钮
-                    3. 至少一个表单组件（带有验证功能）
-                    4. 至少一个交互组件（标签页、手风琴、轮播等）
-                    5. 页脚区域（包含版权信息、链接等）
-
-                    ## 数据模拟
-                    1. 使用合理的示例数据填充界面
-                    2. 确保数据与PRD中描述的业务场景一致
-                    3. 模拟API响应和数据交互
-
-                  #确保数据的一致性和真实性。不要使用外部图片链接，而是使用Bootstrap组件和图标创建视觉元素。\n\n${prompt}`
+                  text: userPrompt
                 }
+                   
+                
               ]
             }
           ]

@@ -343,6 +343,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const generateUIBtn = document.getElementById('generateUIBtn');
     
     if (generateUIBtn) {
+        // 初始化按钮状态
+        updateUIGenerationButton();
+        
         generateUIBtn.addEventListener('click', function() {
             // 检查是否有PRD内容
             if (!window.currentPRD) {
@@ -353,7 +356,14 @@ document.addEventListener('DOMContentLoaded', function() {
             // 添加生成UI的消息
             const generatingUIMsg = document.createElement('div');
             generatingUIMsg.className = 'message bot-message';
-            generatingUIMsg.textContent = '正在基于PRD生成UI原型...';
+            
+            // 根据是否已有UI，显示不同的消息
+            if (window.currentUI) {
+                generatingUIMsg.textContent = '正在基于最新PRD更新UI原型...';
+            } else {
+                generatingUIMsg.textContent = '正在基于PRD生成UI原型...';
+            }
+            
             chatMessages.appendChild(generatingUIMsg);
             chatMessages.scrollTop = chatMessages.scrollHeight;
             
@@ -578,9 +588,19 @@ async function callClaudeArtifactAPIStream(prdContent) {
                                 // 添加AI回复
                                 const botMessage = document.createElement('div');
                                 botMessage.className = 'message bot-message';
-                                botMessage.textContent = `已生成UI界面，请查看右侧预览。`;
+                                
+                                // 根据是否是更新UI显示不同消息
+                                if (window.currentUI) {
+                                    botMessage.textContent = `已更新UI界面，请查看右侧预览。`;
+                                } else {
+                                    botMessage.textContent = `已生成UI界面，请查看右侧预览。`;
+                                }
+                                
                                 chatMessages.appendChild(botMessage);
                                 chatMessages.scrollTop = chatMessages.scrollHeight;
+                                
+                                // 更新UI生成按钮状态
+                                updateUIGenerationButton();
                             } else if (data.type === 'error') {
                                 throw new Error(data.error);
                             }
@@ -801,6 +821,9 @@ async function callClaudeAPIStream(prompt, type) {
                                 prdContent.innerHTML = marked.parse(data.content);
                                 // 滚动到顶部，让用户可以从头阅读完整文档
                                 prdContent.scrollTop = 0;
+                                
+                                // 调用完成回调，更新UI生成按钮状态
+                                onStreamComplete('prd', data.content);
                             } else if (type === 'ui') {
                                 window.currentUI = data.content;
                                 
@@ -824,6 +847,9 @@ async function callClaudeAPIStream(prompt, type) {
                                     
                                     // 设置iframe的sandbox属性，允许脚本执行和打开新窗口
                                     uiPreview.setAttribute('sandbox', 'allow-scripts allow-popups allow-popups-to-escape-sandbox allow-same-origin');
+                                    
+                                    // 调用完成回调，更新UI生成按钮状态
+                                    onStreamComplete('ui', data.content);
                                 }, 1000);
                             }
                         } else if (data.type === 'error') {
@@ -844,7 +870,18 @@ async function callClaudeAPIStream(prompt, type) {
         // 添加AI回复
         const botMessage = document.createElement('div');
         botMessage.className = 'message bot-message';
-        botMessage.textContent = `已生成${type === 'prd' ? 'PRD文档' : 'UI界面'}，请查看右侧预览。`;
+        
+        if (type === 'prd') {
+            botMessage.textContent = `已生成PRD文档，请查看右侧预览。`;
+        } else if (type === 'ui') {
+            // 根据是否已有UI，显示不同的消息
+            if (window.currentUI) {
+                botMessage.textContent = `已更新UI界面，请查看右侧预览。`;
+            } else {
+                botMessage.textContent = `已生成UI界面，请查看右侧预览。`;
+            }
+        }
+        
         chatMessages.appendChild(botMessage);
         chatMessages.scrollTop = chatMessages.scrollHeight;
         
@@ -879,4 +916,60 @@ function escapeHtml(unsafe) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
+}
+// 检测PRD是否已更新，并相应地更新UI生成按钮
+function updateUIGenerationButton() {
+    const generateUIBtn = document.getElementById('generateUIBtn');
+    
+    if (window.currentPRD && window.currentUI) {
+        // 如果已有PRD和UI，则显示为"更新UI"
+        generateUIBtn.textContent = '更新UI';
+        generateUIBtn.classList.remove('btn-primary');
+        generateUIBtn.classList.add('btn-success');
+        
+        // 添加提示信息
+        generateUIBtn.setAttribute('data-bs-toggle', 'tooltip');
+        generateUIBtn.setAttribute('data-bs-placement', 'top');
+        generateUIBtn.setAttribute('title', 'PRD已更新，点击更新UI以匹配最新需求');
+        
+        // 初始化tooltip
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            new bootstrap.Tooltip(generateUIBtn);
+        }
+    } else if (window.currentPRD) {
+        // 如果只有PRD，则显示为"生成UI"
+        generateUIBtn.textContent = '生成UI';
+        generateUIBtn.classList.remove('btn-success');
+        generateUIBtn.classList.add('btn-primary');
+        
+        // 移除tooltip
+        generateUIBtn.removeAttribute('data-bs-toggle');
+        generateUIBtn.removeAttribute('data-bs-placement');
+        generateUIBtn.removeAttribute('title');
+        
+        // 销毁tooltip
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            const tooltip = bootstrap.Tooltip.getInstance(generateUIBtn);
+            if (tooltip) {
+                tooltip.dispose();
+            }
+        }
+    }
+}
+// 流式API调用完成后的回调
+function onStreamComplete(type, content) {
+    console.log(`${type}生成完成`);
+    
+    // 保存内容到全局变量
+    if (type === 'prd') {
+        window.currentPRD = content;
+        
+        // 当PRD更新时，更新UI生成按钮状态
+        updateUIGenerationButton();
+    } else if (type === 'ui') {
+        window.currentUI = content;
+        
+        // 更新UI生成按钮状态
+        updateUIGenerationButton();
+    }
 }

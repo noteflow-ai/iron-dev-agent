@@ -1,18 +1,27 @@
-
 // 系统提示词设置功能
 document.addEventListener('DOMContentLoaded', function() {
     // 获取DOM元素
     const settingsBtn = document.getElementById('settingsBtn');
     const settingsModal = document.getElementById('settingsModal');
-    const prdSystemPrompt = document.getElementById('prdSystemPrompt');
-    const uiSystemPrompt = document.getElementById('uiSystemPrompt');
     const saveSettingsBtn = document.getElementById('saveSettingsBtn');
     const resetSettingsBtn = document.getElementById('resetSettingsBtn');
     
+    // 获取所有提示词文本区域
+    const prdSystemPrompt = document.getElementById('prdSystemPrompt');
+    const uiSystemPrompt = document.getElementById('uiSystemPrompt');
+    const apiSystemPrompt = document.getElementById('apiSystemPrompt');
+    const codeSystemPrompt = document.getElementById('codeSystemPrompt');
+    const testSystemPrompt = document.getElementById('testSystemPrompt');
+    const deploySystemPrompt = document.getElementById('deploySystemPrompt');
+    
     // 默认提示词
     const defaultPrompts = {
-        prd: "你是一位资深的产品经理。",
-        ui: "你是一位专业的UI设计师。"
+        prd: "你是一位资深的产品经理，擅长将用户需求转化为清晰的PRD文档。请根据用户的描述，生成一份详细的产品需求文档(PRD)。",
+        ui: "你是一位专业的UI设计师和前端开发者，擅长将PRD文档转化为可交互的UI原型。请根据用户的需求，生成一个完整的HTML界面原型。",
+        api: "你是一位经验丰富的API设计师，擅长设计RESTful API和GraphQL API。请根据PRD文档，设计一套完整的API接口。",
+        code: "你是一位全栈开发工程师，擅长前端和后端开发。请根据API文档和UI设计，实现相应的代码。",
+        test: "你是一位测试专家，擅长编写各类测试用例。请根据代码实现和PRD文档，编写全面的测试计划。",
+        deploy: "你是一位DevOps工程师，擅长设计部署方案。请根据代码实现和测试计划，设计一套完整的部署方案。"
     };
     
     // 初始化设置按钮点击事件
@@ -45,25 +54,36 @@ document.addEventListener('DOMContentLoaded', function() {
     if (resetSettingsBtn) {
         resetSettingsBtn.addEventListener('click', function() {
             resetSettings();
+            
+            // 显示重置成功提示
+            showToast('设置已重置为默认值');
         });
     }
     
     // 加载设置
     function loadSettings() {
         // 从localStorage获取设置，如果没有则使用默认值
-        const settings = JSON.parse(localStorage.getItem('systemPrompts')) || defaultPrompts;
+        const settings = JSON.parse(localStorage.getItem('systemPrompts')) || {};
         
         // 填充表单
-        prdSystemPrompt.value = settings.prd || defaultPrompts.prd;
-        uiSystemPrompt.value = settings.ui || defaultPrompts.ui;
+        if (prdSystemPrompt) prdSystemPrompt.value = settings.prd || defaultPrompts.prd;
+        if (uiSystemPrompt) uiSystemPrompt.value = settings.ui || defaultPrompts.ui;
+        if (apiSystemPrompt) apiSystemPrompt.value = settings.api || defaultPrompts.api;
+        if (codeSystemPrompt) codeSystemPrompt.value = settings.code || defaultPrompts.code;
+        if (testSystemPrompt) testSystemPrompt.value = settings.test || defaultPrompts.test;
+        if (deploySystemPrompt) deploySystemPrompt.value = settings.deploy || defaultPrompts.deploy;
     }
     
     // 保存设置
     function saveSettings() {
         // 获取表单值
         const settings = {
-            prd: prdSystemPrompt.value,
-            ui: uiSystemPrompt.value
+            prd: prdSystemPrompt ? prdSystemPrompt.value : defaultPrompts.prd,
+            ui: uiSystemPrompt ? uiSystemPrompt.value : defaultPrompts.ui,
+            api: apiSystemPrompt ? apiSystemPrompt.value : defaultPrompts.api,
+            code: codeSystemPrompt ? codeSystemPrompt.value : defaultPrompts.code,
+            test: testSystemPrompt ? testSystemPrompt.value : defaultPrompts.test,
+            deploy: deploySystemPrompt ? deploySystemPrompt.value : defaultPrompts.deploy
         };
         
         // 保存到localStorage
@@ -73,14 +93,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // 重置设置
     function resetSettings() {
         // 填充默认值
-        prdSystemPrompt.value = defaultPrompts.prd;
-        uiSystemPrompt.value = defaultPrompts.ui;
+        if (prdSystemPrompt) prdSystemPrompt.value = defaultPrompts.prd;
+        if (uiSystemPrompt) uiSystemPrompt.value = defaultPrompts.ui;
+        if (apiSystemPrompt) apiSystemPrompt.value = defaultPrompts.api;
+        if (codeSystemPrompt) codeSystemPrompt.value = defaultPrompts.code;
+        if (testSystemPrompt) testSystemPrompt.value = defaultPrompts.test;
+        if (deploySystemPrompt) deploySystemPrompt.value = defaultPrompts.deploy;
         
         // 保存默认设置
         localStorage.setItem('systemPrompts', JSON.stringify(defaultPrompts));
-        
-        // 显示重置成功提示
-        showToast('设置已重置为默认值');
     }
     
     // 显示提示消息
@@ -117,6 +138,27 @@ document.addEventListener('DOMContentLoaded', function() {
     // 导出获取系统提示词的函数
     window.getSystemPrompt = function(type) {
         const settings = JSON.parse(localStorage.getItem('systemPrompts')) || defaultPrompts;
-        return type === 'prd' ? settings.prd : settings.ui;
+        
+        switch (type) {
+            case 'prd':
+                return settings.prd || defaultPrompts.prd;
+            case 'ui':
+                return settings.ui || defaultPrompts.ui;
+            case 'api':
+                return settings.api || defaultPrompts.api;
+            case 'code':
+                return settings.code || defaultPrompts.code;
+            case 'test':
+                return settings.test || defaultPrompts.test;
+            case 'deploy':
+                return settings.deploy || defaultPrompts.deploy;
+            default:
+                return null;
+        }
     };
+    
+    // 导出保存、加载和重置函数，供其他模块使用
+    window.saveSettings = saveSettings;
+    window.loadSettings = loadSettings;
+    window.resetSettings = resetSettings;
 });

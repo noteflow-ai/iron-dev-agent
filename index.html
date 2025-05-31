@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iron端到端智能开发平台</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%234a6fdc'/%3E%3Ctext x='50' y='75' font-size='70' text-anchor='middle' fill='white' font-family='Arial, sans-serif'%3EP%3C/text%3E%3C/svg%3E" type="image/svg+xml">
 </head>
@@ -59,17 +60,32 @@
             <div class="col-8 preview-container">
                 <ul class="nav nav-tabs" id="previewTabs" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="prd-tab" data-bs-toggle="tab" data-bs-target="#prd" type="button" role="tab" aria-controls="prd" aria-selected="true">PRD 预览</button>
+                        <button class="nav-link active" id="prd-tab" data-bs-toggle="tab" data-bs-target="#prd" type="button" role="tab" aria-controls="prd" aria-selected="true">PRD 需求</button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="ui-tab" data-bs-toggle="tab" data-bs-target="#ui" type="button" role="tab" aria-controls="ui" aria-selected="false">UI 预览</button>
+                        <button class="nav-link" id="ui-tab" data-bs-toggle="tab" data-bs-target="#ui" type="button" role="tab" aria-controls="ui" aria-selected="false">UI 设计</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="api-tab" data-bs-toggle="tab" data-bs-target="#api" type="button" role="tab" aria-controls="api" aria-selected="false">API 设计</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="code-tab" data-bs-toggle="tab" data-bs-target="#code" type="button" role="tab" aria-controls="code" aria-selected="false">代码实现</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="test-tab" data-bs-toggle="tab" data-bs-target="#test" type="button" role="tab" aria-controls="test" aria-selected="false">测试计划</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="deploy-tab" data-bs-toggle="tab" data-bs-target="#deploy" type="button" role="tab" aria-controls="deploy" aria-selected="false">部署方案</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="editor-tab" data-bs-toggle="tab" data-bs-target="#editor" type="button" role="tab" aria-controls="editor" aria-selected="false">项目编辑器</button>
                     </li>
                 </ul>
                 <div class="tab-content h-100" id="previewTabsContent">
                     <div class="tab-pane fade show active h-100" id="prd" role="tabpanel" aria-labelledby="prd-tab">
                         <div class="card h-100">
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">PRD.md 预览</h5>
+                                <h5 class="mb-0">PRD.md 需求文档</h5>
                                 <button class="btn btn-sm btn-outline-secondary" id="downloadPRD">下载 PRD</button>
                             </div>
                             <div class="card-body markdown-content" id="prdContent">
@@ -81,7 +97,7 @@
                     <div class="tab-pane fade h-100" id="ui" role="tabpanel" aria-labelledby="ui-tab">
                         <div class="card h-100">
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">UI.html 预览</h5>
+                                <h5 class="mb-0">UI.html 界面设计</h5>
                                 <div class="d-flex align-items-center">
                                     <button class="btn btn-sm btn-primary me-2" id="generateUIBtn">生成UI原型</button>
                                     <div class="ui-viewport-selector">
@@ -102,6 +118,123 @@
                             </div>
                         </div>
                     </div>
+                    <div class="tab-pane fade h-100" id="api" role="tabpanel" aria-labelledby="api-tab">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">API.yaml 接口设计</h5>
+                                <div class="d-flex align-items-center">
+                                    <button class="btn btn-sm btn-primary me-2" id="generateAPIBtn">生成API文档</button>
+                                    <button class="btn btn-sm btn-outline-secondary ms-2" id="downloadAPI">下载 API</button>
+                                </div>
+                            </div>
+                            <div class="card-body markdown-content" id="apiContent">
+                                <!-- API 内容将在这里显示 -->
+                                <p class="text-muted">请先生成PRD文档，然后点击"生成API文档"按钮...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade h-100" id="code" role="tabpanel" aria-labelledby="code-tab">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">代码实现</h5>
+                                <div class="d-flex align-items-center">
+                                    <select class="form-select form-select-sm me-2" id="codeTypeSelector">
+                                        <option value="frontend">前端代码</option>
+                                        <option value="backend">后端代码</option>
+                                        <option value="database">数据库脚本</option>
+                                    </select>
+                                    <button class="btn btn-sm btn-primary me-2" id="generateCodeBtn">生成代码</button>
+                                    <button class="btn btn-sm btn-outline-secondary" id="downloadCode">下载代码</button>
+                                </div>
+                            </div>
+                            <div class="card-body" id="codeContent">
+                                <pre class="code-preview"><code>// 请先生成PRD和API文档，然后点击"生成代码"按钮...</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade h-100" id="test" role="tabpanel" aria-labelledby="test-tab">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">测试计划</h5>
+                                <div class="d-flex align-items-center">
+                                    <select class="form-select form-select-sm me-2" id="testTypeSelector">
+                                        <option value="unit">单元测试</option>
+                                        <option value="integration">集成测试</option>
+                                        <option value="e2e">端到端测试</option>
+                                    </select>
+                                    <button class="btn btn-sm btn-primary me-2" id="generateTestBtn">生成测试</button>
+                                    <button class="btn btn-sm btn-outline-secondary" id="downloadTest">下载测试</button>
+                                </div>
+                            </div>
+                            <div class="card-body markdown-content" id="testContent">
+                                <!-- 测试内容将在这里显示 -->
+                                <p class="text-muted">请先生成代码，然后点击"生成测试"按钮...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade h-100" id="deploy" role="tabpanel" aria-labelledby="deploy-tab">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">部署方案</h5>
+                                <div class="d-flex align-items-center">
+                                    <select class="form-select form-select-sm me-2" id="deployTypeSelector">
+                                        <option value="docker">Docker</option>
+                                        <option value="kubernetes">Kubernetes</option>
+                                        <option value="serverless">Serverless</option>
+                                    </select>
+                                    <button class="btn btn-sm btn-primary me-2" id="generateDeployBtn">生成部署方案</button>
+                                    <button class="btn btn-sm btn-outline-secondary" id="downloadDeploy">下载方案</button>
+                                </div>
+                            </div>
+                            <div class="card-body markdown-content" id="deployContent">
+                                <!-- 部署内容将在这里显示 -->
+                                <p class="text-muted">请先生成代码和测试，然后点击"生成部署方案"按钮...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 项目编辑器 -->
+                    <div class="tab-pane fade h-100" id="editor" role="tabpanel" aria-labelledby="editor-tab">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">项目编辑器</h5>
+                                <div class="d-flex align-items-center">
+                                    <button class="btn btn-sm btn-primary me-2" id="saveFileBtn">保存文件</button>
+                                    <button class="btn btn-sm btn-outline-secondary" id="refreshEditorBtn">刷新</button>
+                                </div>
+                            </div>
+                            <div class="card-body p-0 h-100">
+                                <div class="row h-100 g-0">
+                                    <!-- 左侧文件树 -->
+                                    <div class="col-3 h-100 border-end">
+                                        <div class="file-explorer h-100">
+                                            <div class="p-2 bg-light border-bottom d-flex justify-content-between align-items-center">
+                                                <span>项目文件</span>
+                                                <button class="btn btn-sm btn-outline-secondary" id="createFileBtn" title="新建文件">
+                                                    <i class="bi bi-file-earmark-plus"></i>
+                                                </button>
+                                            </div>
+                                            <div class="file-tree p-2" id="fileTree">
+                                                <!-- 文件树将在这里显示 -->
+                                                <p class="text-muted small">请选择一个项目...</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- 右侧编辑器 -->
+                                    <div class="col-9 h-100">
+                                        <div class="editor-container h-100 d-flex flex-column">
+                                            <div class="editor-header p-2 bg-light border-bottom">
+                                                <span id="currentFilePath">未选择文件</span>
+                                            </div>
+                                            <div class="editor-content flex-grow-1" id="codeEditor">
+                                                <!-- 编辑器将在这里初始化 -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -116,13 +249,83 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="prdSystemPrompt" class="form-label">PRD生成提示词</label>
-                        <textarea class="form-control" id="prdSystemPrompt" rows="10"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="uiSystemPrompt" class="form-label">UI生成提示词</label>
-                        <textarea class="form-control" id="uiSystemPrompt" rows="10"></textarea>
+                    <!-- 标签页导航 -->
+                    <ul class="nav nav-tabs mb-3" id="settingsTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="prd-settings-tab" data-bs-toggle="tab" data-bs-target="#prd-settings" type="button" role="tab" aria-controls="prd-settings" aria-selected="true">PRD 需求</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="ui-settings-tab" data-bs-toggle="tab" data-bs-target="#ui-settings" type="button" role="tab" aria-controls="ui-settings" aria-selected="false">UI 设计</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="api-settings-tab" data-bs-toggle="tab" data-bs-target="#api-settings" type="button" role="tab" aria-controls="api-settings" aria-selected="false">API 设计</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="code-settings-tab" data-bs-toggle="tab" data-bs-target="#code-settings" type="button" role="tab" aria-controls="code-settings" aria-selected="false">代码实现</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="test-settings-tab" data-bs-toggle="tab" data-bs-target="#test-settings" type="button" role="tab" aria-controls="test-settings" aria-selected="false">测试计划</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="deploy-settings-tab" data-bs-toggle="tab" data-bs-target="#deploy-settings" type="button" role="tab" aria-controls="deploy-settings" aria-selected="false">部署方案</button>
+                        </li>
+                    </ul>
+                    
+                    <!-- 标签页内容 -->
+                    <div class="tab-content" id="settingsTabsContent">
+                        <!-- PRD设置 -->
+                        <div class="tab-pane fade show active" id="prd-settings" role="tabpanel" aria-labelledby="prd-settings-tab">
+                            <div class="mb-3">
+                                <label for="prdSystemPrompt" class="form-label">PRD生成提示词</label>
+                                <textarea class="form-control" id="prdSystemPrompt" rows="10" placeholder="输入自定义的PRD生成提示词..."></textarea>
+                                <small class="form-text text-muted">自定义提示词将指导AI如何生成产品需求文档。</small>
+                            </div>
+                        </div>
+                        
+                        <!-- UI设置 -->
+                        <div class="tab-pane fade" id="ui-settings" role="tabpanel" aria-labelledby="ui-settings-tab">
+                            <div class="mb-3">
+                                <label for="uiSystemPrompt" class="form-label">UI生成提示词</label>
+                                <textarea class="form-control" id="uiSystemPrompt" rows="10" placeholder="输入自定义的UI生成提示词..."></textarea>
+                                <small class="form-text text-muted">自定义提示词将指导AI如何生成UI界面设计。</small>
+                            </div>
+                        </div>
+                        
+                        <!-- API设置 -->
+                        <div class="tab-pane fade" id="api-settings" role="tabpanel" aria-labelledby="api-settings-tab">
+                            <div class="mb-3">
+                                <label for="apiSystemPrompt" class="form-label">API生成提示词</label>
+                                <textarea class="form-control" id="apiSystemPrompt" rows="10" placeholder="输入自定义的API生成提示词..."></textarea>
+                                <small class="form-text text-muted">自定义提示词将指导AI如何生成API接口文档。</small>
+                            </div>
+                        </div>
+                        
+                        <!-- 代码设置 -->
+                        <div class="tab-pane fade" id="code-settings" role="tabpanel" aria-labelledby="code-settings-tab">
+                            <div class="mb-3">
+                                <label for="codeSystemPrompt" class="form-label">代码生成提示词</label>
+                                <textarea class="form-control" id="codeSystemPrompt" rows="10" placeholder="输入自定义的代码生成提示词..."></textarea>
+                                <small class="form-text text-muted">自定义提示词将指导AI如何生成前端、后端和数据库代码。</small>
+                            </div>
+                        </div>
+                        
+                        <!-- 测试设置 -->
+                        <div class="tab-pane fade" id="test-settings" role="tabpanel" aria-labelledby="test-settings-tab">
+                            <div class="mb-3">
+                                <label for="testSystemPrompt" class="form-label">测试生成提示词</label>
+                                <textarea class="form-control" id="testSystemPrompt" rows="10" placeholder="输入自定义的测试生成提示词..."></textarea>
+                                <small class="form-text text-muted">自定义提示词将指导AI如何生成单元测试、集成测试和端到端测试。</small>
+                            </div>
+                        </div>
+                        
+                        <!-- 部署设置 -->
+                        <div class="tab-pane fade" id="deploy-settings" role="tabpanel" aria-labelledby="deploy-settings-tab">
+                            <div class="mb-3">
+                                <label for="deploySystemPrompt" class="form-label">部署方案生成提示词</label>
+                                <textarea class="form-control" id="deploySystemPrompt" rows="10" placeholder="输入自定义的部署方案生成提示词..."></textarea>
+                                <small class="form-text text-muted">自定义提示词将指导AI如何生成Docker、Kubernetes和Serverless部署方案。</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -143,8 +346,11 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.40.0/min/vs/loader.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/settings.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/lifecycle.js"></script>
+    <script src="js/editor.js"></script>
 </body>
 </html>

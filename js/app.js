@@ -48,6 +48,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // 清空输入框
         userInput.value = '';
         
+        // 禁用发送按钮，防止重复提交
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 生成中...';
+        
         // 使用流式API生成PRD
         callClaudeAPIStream(message, 'prd');
     }
@@ -125,17 +129,52 @@ document.addEventListener('DOMContentLoaded', function() {
                     const selectedProjectId = this.value;
                     const deleteBtn = document.getElementById('deleteProjectBtn');
                     
+                    // 清空当前内容，无论是选择新项目还是已有项目
+                    window.currentPRD = '';
+                    window.currentUI = '';
+                    prdContent.innerHTML = '<p class="text-muted">请在左侧输入您的需求描述，AI将为您生成PRD文档...</p>';
+                    uiPreview.srcdoc = '<p>请在左侧输入您的需求描述，AI将为您生成UI界面...</p>';
+                    
+                    // 清空生命周期内容
+                    if (window.lifecycleContent) {
+                        window.lifecycleContent = {
+                            api: '',
+                            code: {
+                                frontend: '',
+                                backend: '',
+                                database: ''
+                            },
+                            test: {
+                                unit: '',
+                                integration: '',
+                                e2e: ''
+                            },
+                            deploy: {
+                                docker: '',
+                                kubernetes: '',
+                                serverless: ''
+                            }
+                        };
+                    }
+                    
+                    // 更新所有标签页内容
+                    updateAllTabsContent();
+                    
                     if (selectedProjectId) {
+                        // 如果选择了已有项目，加载项目内容
                         await loadProject(selectedProjectId);
                         deleteBtn.removeAttribute('disabled');
                     } else {
-                        // 清空当前内容
-                        currentProjectId = '';
-                        currentPRD = '';
-                        currentUI = '';
-                        prdContent.innerHTML = '<p class="text-muted">请在左侧输入您的需求描述，AI将为您生成PRD文档...</p>';
-                        uiPreview.srcdoc = '<p>请在左侧输入您的需求描述，AI将为您生成UI界面...</p>';
+                        // 如果选择了新项目，重置项目ID
+                        window.currentProjectId = '';
                         deleteBtn.setAttribute('disabled', 'disabled');
+                        
+                        // 添加新项目消息
+                        const newProjectMessage = document.createElement('div');
+                        newProjectMessage.className = 'message system-message';
+                        newProjectMessage.textContent = `已创建新项目，请输入您的需求描述。`;
+                        chatMessages.appendChild(newProjectMessage);
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
                     }
                 });
                 
@@ -160,11 +199,36 @@ document.addEventListener('DOMContentLoaded', function() {
                                 
                                 // 重置选择器和内容
                                 projectSelect.value = '';
-                                currentProjectId = '';
-                                currentPRD = '';
-                                currentUI = '';
+                                window.currentProjectId = '';
+                                window.currentPRD = '';
+                                window.currentUI = '';
                                 prdContent.innerHTML = '<p class="text-muted">请在左侧输入您的需求描述，AI将为您生成PRD文档...</p>';
                                 uiPreview.srcdoc = '<p>请在左侧输入您的需求描述，AI将为您生成UI界面...</p>';
+                                
+                                // 清空生命周期内容
+                                if (window.lifecycleContent) {
+                                    window.lifecycleContent = {
+                                        api: '',
+                                        code: {
+                                            frontend: '',
+                                            backend: '',
+                                            database: ''
+                                        },
+                                        test: {
+                                            unit: '',
+                                            integration: '',
+                                            e2e: ''
+                                        },
+                                        deploy: {
+                                            docker: '',
+                                            kubernetes: '',
+                                            serverless: ''
+                                        }
+                                    };
+                                }
+                                
+                                // 更新所有标签页内容
+                                updateAllTabsContent();
                                 
                                 // 禁用删除按钮
                                 this.setAttribute('disabled', 'disabled');
@@ -197,17 +261,23 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             
             if (data.success) {
-                currentProjectId = projectId;
+                window.currentProjectId = projectId;
                 
                 if (data.project.prd) {
-                    currentPRD = data.project.prd;
+                    window.currentPRD = data.project.prd;
                     prdContent.innerHTML = marked.parse(data.project.prd);
                 }
                 
                 if (data.project.ui) {
-                    currentUI = data.project.ui;
+                    window.currentUI = data.project.ui;
                     uiPreview.srcdoc = data.project.ui;
                 }
+                
+                // 更新UI生成按钮状态
+                updateUIGenerationButton();
+                
+                // 更新所有标签页内容
+                updateAllTabsContent();
                 
                 // 添加加载项目的消息
                 const loadMessage = document.createElement('div');
@@ -219,6 +289,76 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Error loading project:', error);
         }
+    }
+    
+    // 更新所有标签页内容
+    function updateAllTabsContent() {
+        // 更新API标签页
+        const apiContent = document.getElementById('apiContent');
+        if (apiContent && window.lifecycleContent && window.lifecycleContent.api) {
+            apiContent.innerHTML = marked.parse(window.lifecycleContent.api);
+        } else if (apiContent) {
+            apiContent.innerHTML = '<p class="text-muted">请先生成PRD文档，然后点击"生成API文档"按钮...</p>';
+        }
+        
+        // 更新代码标签页
+        const codeContent = document.getElementById('codeContent');
+        const codeTypeSelector = document.getElementById('codeTypeSelector');
+        if (codeContent && codeTypeSelector && window.lifecycleContent && window.lifecycleContent.code) {
+            const codeType = codeTypeSelector.value;
+            const code = window.lifecycleContent.code[codeType] || '// 请先生成PRD和API文档，然后点击"生成代码"按钮...';
+            codeContent.innerHTML = `<pre class="code-preview"><code>${escapeHtml(code)}</code></pre>`;
+        }
+        
+        // 更新测试标签页
+        const testContent = document.getElementById('testContent');
+        const testTypeSelector = document.getElementById('testTypeSelector');
+        if (testContent && testTypeSelector && window.lifecycleContent && window.lifecycleContent.test) {
+            const testType = testTypeSelector.value;
+            const test = window.lifecycleContent.test[testType];
+            if (test) {
+                testContent.innerHTML = marked.parse(test);
+            } else {
+                testContent.innerHTML = '<p class="text-muted">请先生成代码，然后点击"生成测试"按钮...</p>';
+            }
+        }
+        
+        // 更新部署标签页
+        const deployContent = document.getElementById('deployContent');
+        const deployTypeSelector = document.getElementById('deployTypeSelector');
+        if (deployContent && deployTypeSelector && window.lifecycleContent && window.lifecycleContent.deploy) {
+            const deployType = deployTypeSelector.value;
+            const deploy = window.lifecycleContent.deploy[deployType];
+            if (deploy) {
+                deployContent.innerHTML = marked.parse(deploy);
+            } else {
+                deployContent.innerHTML = '<p class="text-muted">请先生成代码和测试，然后点击"生成部署方案"按钮...</p>';
+            }
+        }
+        
+        // 更新项目编辑器文件树
+        updateEditorFileTree();
+    }
+    
+    // 更新项目编辑器文件树
+    function updateEditorFileTree() {
+        // 检查编辑器是否已初始化
+        if (typeof window.initFileTree === 'function') {
+            console.log('更新项目编辑器文件树');
+            window.initFileTree();
+        } else {
+            console.log('编辑器尚未初始化，将在激活标签页时更新文件树');
+        }
+    }
+    
+    // HTML转义函数
+    function escapeHtml(unsafe) {
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
     }
     
     // 调用加载项目列表函数
@@ -352,6 +492,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('请先生成PRD文档，然后再生成UI原型');
                 return;
             }
+            
+            // 禁用按钮，防止重复点击
+            generateUIBtn.disabled = true;
+            generateUIBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 生成中...';
+            
+            // 禁用发送按钮，防止同时生成多个内容
+            const sendBtn = document.getElementById('sendBtn');
+            if (sendBtn) sendBtn.disabled = true;
             
             // 添加生成UI的消息
             const generatingUIMsg = document.createElement('div');
@@ -614,7 +762,8 @@ async function callClaudeArtifactAPIStream(prdContent) {
                                 console.log('收到不完整的JSON数据，继续等待...');
                                 
                                 // 检查是否HTML已经完整（包含结束标签）
-                                if (type === 'ui' && previewContent.includes('</html>')) {
+                                // 确保previewContent已定义且为字符串
+                                if (type === 'ui' && typeof previewContent === 'string' && previewContent.includes('</html>')) {
                                     console.log('检测到HTML已完整，触发预览显示');
                                     
                                     // 清除保存的状态
@@ -634,42 +783,74 @@ async function callClaudeArtifactAPIStream(prdContent) {
                                     
                                     // 短暂延迟后再显示完整UI
                                     setTimeout(() => {
-                                        console.log("设置UI预览内容...");
-                                        uiPreview.srcdoc = previewContent;
-                                        
-                                        // 设置iframe的sandbox属性
-                                        uiPreview.setAttribute('sandbox', 'allow-scripts allow-popups allow-popups-to-escape-sandbox allow-same-origin');
-                                        
-                                        // 确保iframe内容加载完成后执行
-                                        uiPreview.onload = function() {
-                                            console.log("UI预览加载完成");
-                                            // 调用完成回调，更新UI生成按钮状态
-                                            onStreamComplete('ui', previewContent);
+                                        try {
+                                            console.log("设置UI预览内容...");
+                                            // 确保previewContent存在
+                                            if (typeof previewContent === 'string' && previewContent.trim() !== '') {
+                                                uiPreview.srcdoc = previewContent;
+                                                
+                                                // 设置iframe的sandbox属性
+                                                uiPreview.setAttribute('sandbox', 'allow-scripts allow-popups allow-popups-to-escape-sandbox allow-same-origin');
+                                                
+                                                // 确保iframe内容加载完成后执行
+                                                uiPreview.onload = function() {
+                                                    console.log("UI预览加载完成");
+                                                    // 调用完成回调，更新UI生成按钮状态
+                                                    onStreamComplete('ui', previewContent);
+                                                    
+                                                    // 自动切换到UI预览标签
+                                                    document.getElementById('ui-tab').click();
+                                                };
+                                                
+                                                // 移除思考中的消息
+                                                if (thinkingMsg && thinkingMsg.parentNode) {
+                                                    chatMessages.removeChild(thinkingMsg);
+                                                }
+                                                
+                                                // 添加AI回复
+                                                const botMessage = document.createElement('div');
+                                                botMessage.className = 'message bot-message';
+                                                botMessage.textContent = `已生成UI界面，请查看右侧预览。`;
+                                                chatMessages.appendChild(botMessage);
+                                                chatMessages.scrollTop = chatMessages.scrollHeight;
+                                            } else {
+                                                console.error('预览内容为空或无效');
+                                                throw new Error('预览内容为空或无效');
+                                            }
+                                        } catch (error) {
+                                            console.error('设置UI预览时出错:', error);
                                             
-                                            // 自动切换到UI预览标签
-                                            document.getElementById('ui-tab').click();
-                                        };
-                                        
-                                        // 移除思考中的消息
-                                        chatMessages.removeChild(thinkingMsg);
-                                        
-                                        // 添加AI回复
-                                        const botMessage = document.createElement('div');
-                                        botMessage.className = 'message bot-message';
-                                        botMessage.textContent = `已生成UI界面，请查看右侧预览。`;
-                                        chatMessages.appendChild(botMessage);
-                                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                                            // 显示错误消息
+                                            const errorMessage = document.createElement('div');
+                                            errorMessage.className = 'message bot-message error';
+                                            errorMessage.textContent = `生成UI界面时出错: ${error.message}`;
+                                            chatMessages.appendChild(errorMessage);
+                                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                                        } finally {
+                                            // 确保按钮状态被重置
+                                            resetAllButtonStates();
+                                        }
                                     }, 1000);
                                     
                                     // 中断循环，不再等待更多数据
-                                    return previewContent;
+                                    return previewContent || '';
                                 }
-                                
-                                continue;
                             } else {
                                 // 其他错误，记录并重置
                                 console.error('解析过程中出现意外错误:', parseError);
                                 buffer = '';
+                                
+                                // 尝试恢复并继续
+                                try {
+                                    // 如果是UI生成且内容看起来像HTML，尝试恢复
+                                    if (type === 'ui' && typeof previewContent === 'string' && 
+                                        (previewContent.includes('<html') || previewContent.includes('<body'))) {
+                                        console.log('尝试从错误中恢复UI生成...');
+                                        continue;
+                                    }
+                                } catch (recoveryError) {
+                                    console.error('恢复过程中出错:', recoveryError);
+                                }
                             }
                         }
                     } catch (e) {
@@ -721,6 +902,9 @@ async function callClaudeArtifactAPIStream(prdContent) {
             </body>
             </html>
         `;
+        
+        // 确保在错误情况下也重置按钮状态
+        resetAllButtonStates();
         
         return null;
     }
@@ -837,6 +1021,14 @@ async function callClaudeAPIStream(prompt, type) {
             systemPrompt: customSystemPrompt
         };
         
+        // 记录当前请求的项目状态
+        console.log(`准备${type}生成请求:`, {
+            projectId: window.currentProjectId,
+            hasPRD: !!window.currentPRD,
+            hasUI: !!window.currentUI,
+            isNewProject: !window.currentProjectId
+        });
+        
         // 如果是恢复任务，添加相关参数
         if (unfinishedTask && unfinishedTask.taskId) {
             requestBody.resumeTaskId = unfinishedTask.taskId;
@@ -859,6 +1051,9 @@ async function callClaudeAPIStream(prompt, type) {
         const decoder = new TextDecoder();
         
         // 读取流
+        let buffer = '';
+        let fullContent = previewContent || '';  // 确保fullContent始终有初始值
+        
         while (true) {
             const { value, done } = await reader.read();
             if (done) break;
@@ -939,8 +1134,21 @@ async function callClaudeAPIStream(prompt, type) {
                                     // 设置iframe的sandbox属性，允许脚本执行和打开新窗口
                                     uiPreview.setAttribute('sandbox', 'allow-scripts allow-popups allow-popups-to-escape-sandbox allow-same-origin');
                                     
-                                    // 调用完成回调，更新UI生成按钮状态
-                                    onStreamComplete('ui', data.content);
+                                    // 确保iframe内容加载完成后执行
+                                    uiPreview.onload = function() {
+                                        console.log("UI预览加载完成");
+                                        // 调用完成回调，更新UI生成按钮状态
+                                        onStreamComplete('ui', data.content);
+                                        
+                                        // 自动切换到UI预览标签
+                                        document.getElementById('ui-tab').click();
+                                        
+                                        // 确保按钮状态被重置
+                                        resetAllButtonStates();
+                                    };
+                                    
+                                    // 设置iframe的sandbox属性，允许脚本执行和打开新窗口
+                                    uiPreview.setAttribute('sandbox', 'allow-scripts allow-popups allow-popups-to-escape-sandbox allow-same-origin');
                                 }, 1000);
                             }
                         } else if (data.type === 'error') {
@@ -1063,7 +1271,19 @@ function onStreamComplete(type, content) {
         // 更新UI生成按钮状态
         updateUIGenerationButton();
     }
+    
+    // 无论是哪种类型，都重置所有按钮状态
+    resetAllButtonStates();
+    
+    // 确保发送按钮恢复正常状态
+    const sendBtn = document.getElementById('sendBtn');
+    if (sendBtn) {
+        console.log('在onStreamComplete中恢复发送按钮状态');
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = '发送';
+    }
 }
+
 // 定期保存生成状态到localStorage
 function saveGenerationState(type, content, taskId, progress) {
     localStorage.setItem(`generation_${type}_content`, content);
@@ -1151,5 +1371,27 @@ function onStreamComplete(type, content) {
         
         // 更新UI生成按钮状态
         updateUIGenerationButton();
+    }
+}
+// 重置所有按钮状态的通用函数
+function resetAllButtonStates() {
+    console.log('重置所有按钮状态');
+    
+    // 恢复发送按钮状态
+    const sendBtn = document.getElementById('sendBtn');
+    if (sendBtn) {
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = '发送';
+    }
+    
+    // 恢复生成UI按钮状态
+    const generateUIBtn = document.getElementById('generateUIBtn');
+    if (generateUIBtn) {
+        generateUIBtn.disabled = false;
+        if (window.currentPRD && window.currentUI) {
+            generateUIBtn.textContent = '更新UI';
+        } else if (window.currentPRD) {
+            generateUIBtn.textContent = '生成UI';
+        }
     }
 }

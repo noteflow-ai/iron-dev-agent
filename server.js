@@ -266,8 +266,8 @@ app.post('/api/claude/stream', async (req, res) => {
       if (type === 'prd') {
         userPrompt = `现有PRD文档内容：\n\n${contentToModify}\n\n用户的新需求：\n\n${prompt}`;
       } else if (type === 'ui') {
-        // 对于UI修改，直接传递用户的修改需求，不添加评估
-        userPrompt = `现有UI原型代码：\n\n${contentToModify}\n\n用户的修改需求：\n\n${prompt}\n\n请直接按照用户的要求进行修改，不要进行任何形式的评估或建议，只返回修改后的完整HTML代码。`;
+        // 对于UI修改，使用增量更新方式
+        userPrompt = `现有UI原型代码：\n\n${contentToModify}\n\n用户的修改需求：\n\n${prompt}\n\n请直接按照用户的要求进行修改，不要进行任何形式的评估或建议，只返回修改后的完整HTML代码。请确保修改后的UI严格遵循PRD中定义的功能，保持功能的一致性。请尽可能保留原有代码结构和样式，只修改需要变更的部分，以实现增量更新。`;
       }
     }
     
@@ -513,3 +513,35 @@ const activeGenerations = new Map();
 function generateUniqueId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 }
+// 更新项目内容
+app.put('/api/projects/:projectId', (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { prd, ui } = req.body;
+    const projectPath = path.join(projectsDir, projectId);
+    
+    if (!fs.existsSync(projectPath)) {
+      return res.status(404).json({ success: false, error: '项目不存在' });
+    }
+    
+    // 更新PRD文件（如果提供）
+    if (prd !== undefined) {
+      const prdPath = path.join(projectPath, 'PRD.md');
+      fs.writeFileSync(prdPath, prd);
+    }
+    
+    // 更新UI文件（如果提供）
+    if (ui !== undefined) {
+      const uiPath = path.join(projectPath, 'UI.html');
+      fs.writeFileSync(uiPath, ui);
+    }
+    
+    res.json({
+      success: true,
+      message: `项目 ${projectId} 已成功更新`
+    });
+  } catch (error) {
+    console.error('Error updating project:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});

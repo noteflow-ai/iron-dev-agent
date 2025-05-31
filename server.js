@@ -216,7 +216,10 @@ app.delete('/api/projects/:projectId', (req, res) => {
 // 流式API调用端点
 app.post('/api/claude/stream', async (req, res) => {
   try {
-    const { prompt, type, projectId, previousContent, systemPrompt } = req.body;
+    const { prompt, type, projectId, previousContent, systemPrompt, resumeTaskId, resumeFrom } = req.body;
+    
+    // 生成或使用任务ID
+    const taskId = resumeTaskId || generateUniqueId();
     
     // 设置SSE响应头
     res.writeHead(200, {
@@ -237,6 +240,26 @@ app.post('/api/claude/stream', async (req, res) => {
     // 使用previousContent参数或文件中的内容
     const contentToModify = previousContent || existingContent;
     
+    // 如果是恢复任务，获取之前的状态
+    let startPosition = 0;
+    let fullContent = '';
+    
+    if (resumeTaskId && activeGenerations.has(resumeTaskId)) {
+      const savedState = activeGenerations.get(resumeTaskId);
+      startPosition = resumeFrom || savedState.position;
+      fullContent = savedState.content || '';
+    }
+    
+    // 存储任务状态
+    activeGenerations.set(taskId, {
+      prompt,
+      type,
+      projectId: actualProjectId,
+      content: fullContent,
+      position: startPosition,
+      timestamp: Date.now()
+    });
+    
     // 如果是修改现有内容，将现有内容添加到提示中
     let userPrompt = prompt;
     if (contentToModify) {
@@ -251,8 +274,8 @@ app.post('/api/claude/stream', async (req, res) => {
     // 获取系统提示词
     const finalSystemPrompt = getSystemPrompt(type, contentToModify, systemPrompt);
     
-    // 发送初始信息
-    res.write(`data: ${JSON.stringify({ type: 'init', projectId: actualProjectId })}\n\n`);
+    // 发送初始信息，包含任务ID
+    res.write(`data: ${JSON.stringify({ type: 'init', projectId: actualProjectId, taskId: taskId })}\n\n`);
     
     try {
       // 使用Bedrock SDK的原生流式输出
@@ -283,8 +306,16 @@ app.post('/api/claude/stream', async (req, res) => {
       const response = await bedrockClient.send(command);
       
       // 处理流式响应
-      let fullContent = '';
       const decoder = new TextDecoder('utf-8');
+      let currentPosition = startPosition;
+      
+      // 定期更新任务状态
+      const updateInterval = setInterval(() => {
+        if (activeGenerations.has(taskId)) {
+          activeGenerations.get(taskId).content = fullContent;
+          activeGenerations.get(taskId).position = currentPosition;
+        }
+      }, 5000);
       
       // 处理流式响应的事件流
       for await (const chunk of response.body) {
@@ -299,15 +330,25 @@ app.post('/api/claude/stream', async (req, res) => {
             if (parsedChunk.delta && parsedChunk.delta.text) {
               const textChunk = parsedChunk.delta.text;
               fullContent += textChunk;
+              currentPosition += textChunk.length;
               
               // 发送数据块给客户端
-              res.write(`data: ${JSON.stringify({ type: 'chunk', content: textChunk })}\n\n`);
+              res.write(`data: ${JSON.stringify({ type: 'chunk', content: textChunk, position: currentPosition })}\n\n`);
+              
+              // 更新任务状态
+              if (activeGenerations.has(taskId)) {
+                activeGenerations.get(taskId).content = fullContent;
+                activeGenerations.get(taskId).position = currentPosition;
+              }
             }
           } catch (e) {
             console.error('Error parsing chunk:', e);
           }
         }
       }
+      
+      // 清除更新间隔
+      clearInterval(updateInterval);
       
       // 保存到文件
       if (type === 'prd') {
@@ -319,6 +360,11 @@ app.post('/api/claude/stream', async (req, res) => {
       // 发送完成信息
       res.write(`data: ${JSON.stringify({ type: 'done', content: fullContent })}\n\n`);
       res.end();
+      
+      // 完成后保留任务状态一段时间，以便可能的重连
+      setTimeout(() => {
+        activeGenerations.delete(taskId);
+      }, 3600000); // 1小时后删除
       
     } catch (error) {
       console.error('Error calling Claude API:', error);
@@ -460,3 +506,10 @@ app.post('/api/claude/artifact', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+// 存储活跃的生成任务
+const activeGenerations = new Map();
+
+// 生成唯一ID的函数
+function generateUniqueId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+}

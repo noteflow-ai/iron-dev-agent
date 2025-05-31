@@ -612,6 +612,59 @@ async function callClaudeArtifactAPIStream(prdContent) {
                             if (parseError instanceof SyntaxError) {
                                 // 继续收集数据，不做任何处理
                                 console.log('收到不完整的JSON数据，继续等待...');
+                                
+                                // 检查是否HTML已经完整（包含结束标签）
+                                if (type === 'ui' && previewContent.includes('</html>')) {
+                                    console.log('检测到HTML已完整，触发预览显示');
+                                    
+                                    // 清除保存的状态
+                                    clearGenerationState(type);
+                                    
+                                    // 创建一个加载提示
+                                    uiPreview.srcdoc = `
+                                        <div style="display: flex; justify-content: center; align-items: center; height: 100%; flex-direction: column;">
+                                            <div style="text-align: center; margin-bottom: 20px;">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                            </div>
+                                            <p>正在渲染UI原型，请稍候...</p>
+                                        </div>
+                                    `;
+                                    
+                                    // 短暂延迟后再显示完整UI
+                                    setTimeout(() => {
+                                        console.log("设置UI预览内容...");
+                                        uiPreview.srcdoc = previewContent;
+                                        
+                                        // 设置iframe的sandbox属性
+                                        uiPreview.setAttribute('sandbox', 'allow-scripts allow-popups allow-popups-to-escape-sandbox allow-same-origin');
+                                        
+                                        // 确保iframe内容加载完成后执行
+                                        uiPreview.onload = function() {
+                                            console.log("UI预览加载完成");
+                                            // 调用完成回调，更新UI生成按钮状态
+                                            onStreamComplete('ui', previewContent);
+                                            
+                                            // 自动切换到UI预览标签
+                                            document.getElementById('ui-tab').click();
+                                        };
+                                        
+                                        // 移除思考中的消息
+                                        chatMessages.removeChild(thinkingMsg);
+                                        
+                                        // 添加AI回复
+                                        const botMessage = document.createElement('div');
+                                        botMessage.className = 'message bot-message';
+                                        botMessage.textContent = `已生成UI界面，请查看右侧预览。`;
+                                        chatMessages.appendChild(botMessage);
+                                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                                    }, 1000);
+                                    
+                                    // 中断循环，不再等待更多数据
+                                    return previewContent;
+                                }
+                                
                                 continue;
                             } else {
                                 // 其他错误，记录并重置
@@ -678,28 +731,23 @@ async function callClaudeAPIStream(prompt, type) {
     // 显示思考中的消息
     const thinkingMsg = document.createElement('div');
     thinkingMsg.className = 'message bot-message thinking';
-    
-    
-    // 创建思考内容区域
-    const thinkingContent = document.createElement('div');
-    thinkingContent.className = 'thinking-content';
-   
-    
-    // 添加初始思考消息
     thinkingMsg.textContent = 'Iron正在思考...';
     chatMessages.appendChild(thinkingMsg);
     chatMessages.scrollTop = chatMessages.scrollHeight;
     
-    
-    
-   
+    // 检查是否有未完成的任务
+    const unfinishedTask = checkForUnfinishedGeneration(type);
+    let taskId = null;
+    let previewContent = unfinishedTask ? unfinishedTask.content : '';
+    let retryCount = 0;
+    const maxRetries = 3;
     
     try {
         // 获取系统提示词（如果有设置）
         const customSystemPrompt = window.getSystemPrompt ? window.getSystemPrompt(type) : null;
         
         // 创建预览内容容器
-        let previewContent = '';
+        let previewContent = unfinishedTask ? unfinishedTask.content : '';
         
         // 创建预览区域的流式更新元素
         let previewElement;
@@ -707,6 +755,11 @@ async function callClaudeAPIStream(prompt, type) {
             // 清空现有内容
             prdContent.innerHTML = '<div class="streaming-content markdown-preview"></div>';
             previewElement = prdContent.querySelector('.streaming-content');
+            
+            // 如果有未完成的内容，先显示出来
+            if (previewContent) {
+                previewElement.innerHTML = marked.parse(previewContent);
+            }
         } else if (type === 'ui') {
             // 为UI预览创建一个临时容器，添加Bootstrap样式以美化代码显示
             uiPreview.srcdoc = `
@@ -747,12 +800,24 @@ async function callClaudeAPIStream(prompt, type) {
                             border-radius: 5px 5px 0 0;
                             font-weight: bold;
                             margin-bottom: -5px;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                        }
+                        .reconnect-info {
+                            color: #ffc107;
+                            font-style: italic;
+                            margin-top: 10px;
                         }
                     </style>
                 </head>
                 <body>
-                    <div class="code-header">UI原型代码生成中...</div>
-                    <div class="streaming-content"></div>
+                    <div class="code-header">
+                        <span>UI原型代码生成中...</span>
+                        <span class="badge bg-light text-dark" id="progress-badge">0%</span>
+                    </div>
+                    <div class="streaming-content">${previewContent}</div>
+                    ${unfinishedTask ? '<div class="reconnect-info">已恢复之前的生成进度...</div>' : ''}
                 </body>
                 </html>
             `;
@@ -763,19 +828,30 @@ async function callClaudeAPIStream(prompt, type) {
             previewElement = uiPreview.contentDocument.querySelector('.streaming-content');
         }
         
+        // 准备请求参数
+        const requestBody = { 
+            prompt, 
+            type,
+            projectId: window.currentProjectId,
+            previousContent: type === 'prd' ? window.currentPRD : window.currentUI,
+            systemPrompt: customSystemPrompt
+        };
+        
+        // 如果是恢复任务，添加相关参数
+        if (unfinishedTask && unfinishedTask.taskId) {
+            requestBody.resumeTaskId = unfinishedTask.taskId;
+            requestBody.resumeFrom = previewContent.length;
+            
+            console.log('正在恢复任务:', unfinishedTask.taskId, '从位置:', previewContent.length);
+        }
+        
         // 调用流式API
         const response = await fetch('/api/claude/stream', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ 
-                prompt, 
-                type,
-                projectId: window.currentProjectId,
-                previousContent: type === 'prd' ? window.currentPRD : window.currentUI,
-                systemPrompt: customSystemPrompt
-            }),
+            body: JSON.stringify(requestBody),
         });
         
         // 创建事件源
@@ -796,8 +872,11 @@ async function callClaudeAPIStream(prompt, type) {
                         const data = JSON.parse(line.substring(6));
                         
                         if (data.type === 'init') {
-                            // 初始化项目ID
+                            // 初始化项目ID和任务ID
                             window.currentProjectId = data.projectId;
+                            taskId = data.taskId;
+                            
+                            console.log('任务已初始化，ID:', taskId);
                         } else if (data.type === 'chunk') {
                             // 添加内容块
                             previewContent += data.content;
@@ -812,6 +891,18 @@ async function callClaudeAPIStream(prompt, type) {
                                 prdContent.scrollTop = prdContent.scrollHeight;
                             } else if (type === 'ui') {
                                 previewElement.textContent = previewContent;
+                                
+                                // 更新进度指示器
+                                const progressBadge = uiPreview.contentDocument.querySelector('#progress-badge');
+                                if (progressBadge) {
+                                    const progress = Math.min(Math.round((previewContent.length / 50000) * 100), 100);
+                                    progressBadge.textContent = `${progress}%`;
+                                }
+                            }
+                            
+                            // 每500ms保存一次状态
+                            if (Date.now() % 500 < 100 && taskId) {
+                                saveGenerationState(type, previewContent, taskId, 'in_progress');
                             }
                         } else if (data.type === 'done') {
                             // 完成生成
@@ -956,6 +1047,95 @@ function updateUIGenerationButton() {
         }
     }
 }
+// 流式API调用完成后的回调
+function onStreamComplete(type, content) {
+    console.log(`${type}生成完成`);
+    
+    // 保存内容到全局变量
+    if (type === 'prd') {
+        window.currentPRD = content;
+        
+        // 当PRD更新时，更新UI生成按钮状态
+        updateUIGenerationButton();
+    } else if (type === 'ui') {
+        window.currentUI = content;
+        
+        // 更新UI生成按钮状态
+        updateUIGenerationButton();
+    }
+}
+// 定期保存生成状态到localStorage
+function saveGenerationState(type, content, taskId, progress) {
+    localStorage.setItem(`generation_${type}_content`, content);
+    localStorage.setItem(`generation_${type}_taskId`, taskId);
+    localStorage.setItem(`generation_${type}_progress`, progress);
+    localStorage.setItem(`generation_${type}_timestamp`, Date.now());
+}
+
+// 检查是否有未完成的生成任务
+function checkForUnfinishedGeneration(type) {
+    const content = localStorage.getItem(`generation_${type}_content`);
+    const taskId = localStorage.getItem(`generation_${type}_taskId`);
+    const progress = localStorage.getItem(`generation_${type}_progress`);
+    const timestamp = localStorage.getItem(`generation_${type}_timestamp`);
+    
+    // 如果有未完成的任务且时间不超过1小时
+    if (content && taskId && timestamp && (Date.now() - timestamp < 3600000)) {
+        return { content, taskId, progress };
+    }
+    return null;
+}
+
+// 清除生成状态
+function clearGenerationState(type) {
+    localStorage.removeItem(`generation_${type}_content`);
+    localStorage.removeItem(`generation_${type}_taskId`);
+    localStorage.removeItem(`generation_${type}_progress`);
+    localStorage.removeItem(`generation_${type}_timestamp`);
+}
+
+// 检测PRD是否已更新，并相应地更新UI生成按钮
+function updateUIGenerationButton() {
+    const generateUIBtn = document.getElementById('generateUIBtn');
+    
+    if (!generateUIBtn) return;
+    
+    if (window.currentPRD && window.currentUI) {
+        // 如果已有PRD和UI，则显示为"更新UI"
+        generateUIBtn.textContent = '更新UI';
+        generateUIBtn.classList.remove('btn-primary');
+        generateUIBtn.classList.add('btn-success');
+        
+        // 添加提示信息
+        generateUIBtn.setAttribute('data-bs-toggle', 'tooltip');
+        generateUIBtn.setAttribute('data-bs-placement', 'top');
+        generateUIBtn.setAttribute('title', 'PRD已更新，点击更新UI以匹配最新需求');
+        
+        // 初始化tooltip
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            new bootstrap.Tooltip(generateUIBtn);
+        }
+    } else if (window.currentPRD) {
+        // 如果只有PRD，则显示为"生成UI"
+        generateUIBtn.textContent = '生成UI';
+        generateUIBtn.classList.remove('btn-success');
+        generateUIBtn.classList.add('btn-primary');
+        
+        // 移除tooltip
+        generateUIBtn.removeAttribute('data-bs-toggle');
+        generateUIBtn.removeAttribute('data-bs-placement');
+        generateUIBtn.removeAttribute('title');
+        
+        // 销毁tooltip
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            const tooltip = bootstrap.Tooltip.getInstance(generateUIBtn);
+            if (tooltip) {
+                tooltip.dispose();
+            }
+        }
+    }
+}
+
 // 流式API调用完成后的回调
 function onStreamComplete(type, content) {
     console.log(`${type}生成完成`);

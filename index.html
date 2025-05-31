@@ -82,10 +82,23 @@
                         <div class="card h-100">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h5 class="mb-0">UI.html 预览</h5>
-                                <button class="btn btn-sm btn-outline-secondary" id="downloadUI">下载 UI</button>
+                                <div class="d-flex align-items-center">
+                                    <button class="btn btn-sm btn-primary me-2" id="generateUIBtn">生成UI原型</button>
+                                    <div class="ui-viewport-selector">
+                                        <label for="viewportSelector">预览设备:</label>
+                                        <select class="form-select form-select-sm" id="viewportSelector">
+                                            <option value="desktop">桌面端</option>
+                                            <option value="tablet">平板</option>
+                                            <option value="mobile">手机</option>
+                                        </select>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-secondary ms-2" id="downloadUI">下载 UI</button>
+                                </div>
                             </div>
                             <div class="card-body" id="uiPreviewWrapper">
-                                <iframe id="uiPreview" class="w-100 h-100" srcdoc="<p>请在左侧输入您的需求描述，AI将为您生成UI界面...</p>" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-same-origin"></iframe>
+                                <div class="device-preview-container">
+                                    <iframe id="uiPreview" class="desktop w-100 h-100" srcdoc="<p>请在左侧输入您的需求描述，确认PRD后可生成UI界面...</p>" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-same-origin"></iframe>
+                                </div>
                             </div>
                         </div>
                     </div>

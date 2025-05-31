@@ -404,3 +404,206 @@ code {
 .chat-messages::-webkit-scrollbar-thumb:hover {
     background-color: #6c757d;
 }
+/* 确认消息样式 */
+.message.confirmation {
+    background-color: #e8f4fd;
+    border-left: 4px solid #4a6fdc;
+    padding: 12px 15px;
+}
+
+.confirmation-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+/* 增强UI预览功能的样式 */
+.ui-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.ui-viewport-selector {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+}
+
+.ui-viewport-selector label {
+    margin-right: 8px;
+    font-size: 0.9rem;
+}
+
+/* 不同设备预览尺寸 */
+#uiPreview.mobile {
+    width: 375px !important;
+    height: 667px !important;
+    margin: 0 auto;
+    border: 10px solid #222;
+    border-radius: 20px;
+}
+
+#uiPreview.tablet {
+    width: 768px !important;
+    height: 1024px !important;
+    margin: 0 auto;
+    border: 12px solid #222;
+    border-radius: 12px;
+}
+
+#uiPreview.desktop {
+    width: 100% !important;
+    height: 100% !important;
+    border: 1px solid #dee2e6;
+}
+
+/* 设备预览容器 */
+.device-preview-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    background-color: #f8f9fa;
+    overflow: auto;
+    padding: 20px;
+}
+/* 思考过程样式 */
+.thinking-process {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #f0f7ff;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.thinking-process p {
+    margin: 0 0 5px 0;
+    color: #4a6fdc;
+    font-weight: 500;
+}
+
+.thinking-content {
+    padding-left: 10px;
+}
+
+.thought-item {
+    margin: 5px 0;
+    padding: 3px 0;
+    border-bottom: 1px dashed #e0e0e0;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.thinking-dots {
+    display: inline-block;
+}
+
+.thinking-dots span {
+    display: inline-block;
+    animation: dotPulse 1.5s infinite;
+    margin-right: 2px;
+}
+
+.thinking-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.thinking-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes dotPulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.5); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
+}
+/* 流式内容样式 */
+.streaming-content {
+    position: relative;
+    min-height: 100px;
+}
+
+.streaming-content::after {
+    content: '|';
+    display: inline-block;
+    animation: blink 1s infinite;
+    color: #4a6fdc;
+    font-weight: bold;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* Markdown预览增强 */
+.markdown-preview {
+    line-height: 1.6;
+}
+
+.markdown-preview h1, 
+.markdown-preview h2, 
+.markdown-preview h3, 
+.markdown-preview h4, 
+.markdown-preview h5, 
+.markdown-preview h6 {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.markdown-preview h1 {
+    border-bottom: 2px solid #eaecef;
+    padding-bottom: 0.3rem;
+}
+
+.markdown-preview h2 {
+    border-bottom: 1px solid #eaecef;
+    padding-bottom: 0.3rem;
+}
+
+.markdown-preview ul, 
+.markdown-preview ol {
+    padding-left: 2rem;
+}
+
+.markdown-preview blockquote {
+    padding: 0.5rem 1rem;
+    border-left: 4px solid #dfe2e5;
+    color: #6a737d;
+    margin: 1rem 0;
+}
+
+.markdown-preview code {
+    background-color: rgba(27,31,35,0.05);
+    border-radius: 3px;
+    padding: 0.2em 0.4em;
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.markdown-preview pre {
+    background-color: #f6f8fa;
+    border-radius: 3px;
+    padding: 16px;
+    overflow: auto;
+}
+
+.markdown-preview table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.markdown-preview table th,
+.markdown-preview table td {
+    border: 1px solid #dfe2e5;
+    padding: 6px 13px;
+}
+
+.markdown-preview table tr:nth-child(2n) {
+    background-color: #f6f8fa;
+}

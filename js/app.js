@@ -273,8 +273,36 @@ document.addEventListener('DOMContentLoaded', function() {
                     uiPreview.srcdoc = data.project.ui;
                 }
                 
-                // 更新UI生成按钮状态
-                updateUIGenerationButton();
+                // 尝试加载生命周期内容（如果有）
+                try {
+                    const lifecycleResponse = await fetch(`/api/projects/${projectId}/lifecycle`);
+                    const lifecycleData = await lifecycleResponse.json();
+                    
+                    if (lifecycleData.success && lifecycleData.lifecycleContent) {
+                        window.lifecycleContent = lifecycleData.lifecycleContent;
+                    }
+                } catch (lifecycleError) {
+                    console.log('没有找到生命周期内容或格式不正确，使用默认空内容');
+                    // 使用默认的空生命周期内容
+                    window.lifecycleContent = {
+                        api: '',
+                        code: {
+                            frontend: '',
+                            backend: '',
+                            database: ''
+                        },
+                        test: {
+                            unit: '',
+                            integration: '',
+                            e2e: ''
+                        },
+                        deploy: {
+                            docker: '',
+                            kubernetes: '',
+                            serverless: ''
+                        }
+                    };
+                }
                 
                 // 更新所有标签页内容
                 updateAllTabsContent();
@@ -338,6 +366,20 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 更新项目编辑器文件树
         updateEditorFileTree();
+        
+        // 更新所有按钮状态
+        updateAllButtonStates();
+    }
+    
+    // 更新所有按钮状态
+    function updateAllButtonStates() {
+        // 更新UI生成按钮状态
+        updateUIGenerationButton();
+        
+        // 更新生命周期按钮状态
+        if (typeof window.updateButtonStates === 'function') {
+            window.updateButtonStates();
+        }
     }
     
     // 更新项目编辑器文件树

@@ -908,3 +908,57 @@ code {
 .file-path-nav .path-item.active:hover {
     text-decoration: none;
 }
+/* 流式生成内容样式 */
+.streaming-content {
+    min-height: 100px;
+    padding: 10px;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+    overflow-y: auto;
+    max-height: calc(100vh - 300px);
+}
+
+.code-preview-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.code-header {
+    padding: 8px 12px;
+    background-color: #f1f3f5;
+    border-bottom: 1px solid #dee2e6;
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.code-preview {
+    padding: 12px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    white-space: pre-wrap;
+    overflow-y: auto;
+    flex-grow: 1;
+    min-height: 300px;
+    max-height: calc(100vh - 350px);
+    margin-bottom: 0;
+}
+
+.blinking-cursor {
+    display: inline-block;
+    width: 0.5em;
+    height: 1em;
+    background-color: #212529;
+    animation: blink 1s step-end infinite;
+    margin-left: 2px;
+    vertical-align: middle;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}

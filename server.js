@@ -545,3 +545,78 @@ app.put('/api/projects/:projectId', (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+// 获取项目生命周期内容
+app.get('/api/projects/:projectId/lifecycle', (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const projectPath = path.join(projectsDir, projectId);
+    
+    if (!fs.existsSync(projectPath)) {
+      return res.status(404).json({ success: false, error: '项目不存在' });
+    }
+    
+    const lifecyclePath = path.join(projectPath, 'lifecycle.json');
+    
+    // 如果生命周期文件存在，返回其内容
+    if (fs.existsSync(lifecyclePath)) {
+      const lifecycleContent = JSON.parse(fs.readFileSync(lifecyclePath, 'utf8'));
+      
+      res.json({
+        success: true,
+        lifecycleContent
+      });
+    } else {
+      // 如果文件不存在，返回空的生命周期内容
+      res.json({
+        success: true,
+        lifecycleContent: {
+          api: '',
+          code: {
+            frontend: '',
+            backend: '',
+            database: ''
+          },
+          test: {
+            unit: '',
+            integration: '',
+            e2e: ''
+          },
+          deploy: {
+            docker: '',
+            kubernetes: '',
+            serverless: ''
+          }
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Error getting project lifecycle:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 保存项目生命周期内容
+app.put('/api/projects/:projectId/lifecycle', (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const lifecycleContent = req.body;
+    const projectPath = path.join(projectsDir, projectId);
+    
+    if (!fs.existsSync(projectPath)) {
+      return res.status(404).json({ success: false, error: '项目不存在' });
+    }
+    
+    const lifecyclePath = path.join(projectPath, 'lifecycle.json');
+    
+    // 保存生命周期内容
+    fs.writeFileSync(lifecyclePath, JSON.stringify(lifecycleContent, null, 2));
+    
+    res.json({
+      success: true,
+      message: `项目 ${projectId} 的生命周期内容已成功保存`
+    });
+  } catch (error) {
+    console.error('Error saving project lifecycle:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
